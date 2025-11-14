@@ -40,3 +40,4 @@ Thumbs.db
 # Sensitive files
 password_DB.txt
 
+.vercel
