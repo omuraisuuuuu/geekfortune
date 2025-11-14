@@ -44,6 +44,14 @@ For detailed instructions, see [VERCEL_PUBLIC_ACCESS.md](./VERCEL_PUBLIC_ACCESS.
 - User profiles with statistics
 - Pixel art style UI
 
+## 🔌 Подключение нового проекта Supabase
+
+Если нужно подключить проект к новому проекту Supabase:
+
+1. Следуйте инструкции в [QUICK_CONNECT_GUIDE.md](./QUICK_CONNECT_GUIDE.md)
+2. Или подробная инструкция в [CONNECT_NEW_SUPABASE.md](./CONNECT_NEW_SUPABASE.md)
+3. SQL скрипт для создания таблиц в [setup_new_supabase.sql](./setup_new_supabase.sql)
+
 ## 📝 Original Design
 
 This is a code bundle for Add Pixel Feature. The original project is available at https://www.figma.com/design/3AkpoHc4ijjk6OZGxPplmf/Add-Pixel-Feature.

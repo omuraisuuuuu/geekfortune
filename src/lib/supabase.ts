@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
 // Get keys from environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://yfehfkmeruawtuwduyvt.supabase.co'
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmZWhma21lcnVhd3R1d2R1eXZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMxMzkxMTUsImV4cCI6MjA3ODcxNTExNX0.XKJGee3n30KF8Cts-Jdpr34N38ztInpF3qwRdXbqeyY'
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://qxkmwmrjsyjxmtydahct.supabase.co'
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4a213bXJqc3lqeG10eWRhaGN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMxNDMyNzgsImV4cCI6MjA3ODcxOTI3OH0.xQi4JbxBDk8u2ZtSkcrRTsbVUOtbrpsgGPRICy_2ybo'
 
 // Check for keys
 if (!supabaseUrl || supabaseUrl.includes('YOUR_SUPABASE_URL')) {
