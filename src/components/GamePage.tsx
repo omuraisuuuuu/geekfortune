@@ -14,7 +14,6 @@ interface Question {
   points: number;
 }
 
-// Shuffle array function
 const shuffleArray = <T,>(array: T[]): T[] => {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -24,9 +23,7 @@ const shuffleArray = <T,>(array: T[]): T[] => {
   return shuffled;
 };
 
-// All 100 questions (30 movies, 40 videogames, 30 music) - all worth 100 points
 const allQuestions: Question[] = [
-  // MOVIES (30 questions)
   { id: 1, question: "Who directed 'The Matrix' trilogy?", options: ["Spielberg", "The Wachowskis", "Nolan", "Cameron"], correctAnswer: 1, category: 'movies', points: 100 },
   { id: 2, question: "Which movie won the Oscar for Best Picture in 1994?", options: ["Pulp Fiction", "Forrest Gump", "The Shawshank Redemption", "Quiz Show"], correctAnswer: 1, category: 'movies', points: 100 },
   { id: 3, question: "What is the highest-grossing film of all time (unadjusted)?", options: ["Titanic", "Avatar", "Avengers: Endgame", "Star Wars"], correctAnswer: 1, category: 'movies', points: 100 },
@@ -57,8 +54,6 @@ const allQuestions: Question[] = [
   { id: 28, question: "Who directed 'Interstellar'?", options: ["Christopher Nolan", "Denis Villeneuve", "Ridley Scott", "Danny Boyle"], correctAnswer: 0, category: 'movies', points: 100 },
   { id: 29, question: "What is the name of the main character in 'The Dark Knight'?", options: ["Batman", "Bruce Wayne", "Joker", "Harvey Dent"], correctAnswer: 1, category: 'movies', points: 100 },
   { id: 30, question: "Which movie features a character named Luke Skywalker?", options: ["Star Wars", "Star Trek", "Guardians of the Galaxy", "Dune"], correctAnswer: 0, category: 'movies', points: 100 },
-  
-  // VIDEOGAMES (40 questions)
   { id: 31, question: "Which game series features a plumber saving a princess?", options: ["Sonic", "Super Mario", "Mega Man", "Zelda"], correctAnswer: 1, category: 'videogames', points: 100 },
   { id: 32, question: "What is the name of the main character in 'The Legend of Zelda'?", options: ["Zelda", "Link", "Ganon", "Epona"], correctAnswer: 1, category: 'videogames', points: 100 },
   { id: 33, question: "In 'Portal', what is the name of the AI antagonist?", options: ["HAL 9000", "GLaDOS", "SHODAN", "Cortana"], correctAnswer: 1, category: 'videogames', points: 100 },
@@ -99,8 +94,6 @@ const allQuestions: Question[] = [
   { id: 68, question: "Which game features a character named Jin Sakai?", options: ["Ghost of Tsushima", "Sekiro", "Nioh", "Onimusha"], correctAnswer: 0, category: 'videogames', points: 100 },
   { id: 69, question: "What is the name of the main character in 'Control'?", options: ["Jesse Faden", "Dylan Faden", "Dr. Casper Darling", "Ahti"], correctAnswer: 0, category: 'videogames', points: 100 },
   { id: 70, question: "Which game features a character named Bayek?", options: ["Assassin's Creed Origins", "Assassin's Creed Odyssey", "Assassin's Creed Valhalla", "Assassin's Creed Unity"], correctAnswer: 0, category: 'videogames', points: 100 },
-  
-  // MUSIC (30 questions)
   { id: 71, question: "Which band released 'Bohemian Rhapsody'?", options: ["The Beatles", "Led Zeppelin", "Queen", "Pink Floyd"], correctAnswer: 2, category: 'music', points: 100 },
   { id: 72, question: "What was Nirvana's breakthrough album?", options: ["Bleach", "Nevermind", "In Utero", "MTV Unplugged"], correctAnswer: 1, category: 'music', points: 100 },
   { id: 73, question: "Which composer created the 'Star Wars' soundtrack?", options: ["Hans Zimmer", "John Williams", "Ennio Morricone", "Danny Elfman"], correctAnswer: 1, category: 'music', points: 100 },
@@ -146,23 +139,19 @@ export function GamePage({ onComplete, onBack }: GamePageProps) {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
 
-  // Select 10 questions (3 movies, 4 videogames, 3 music) when game starts
   useEffect(() => {
     const movies = allQuestions.filter(q => q.category === 'movies');
     const videogames = allQuestions.filter(q => q.category === 'videogames');
     const music = allQuestions.filter(q => q.category === 'music');
 
-    // Shuffle each category
     const shuffledMovies = shuffleArray(movies);
     const shuffledVideogames = shuffleArray(videogames);
     const shuffledMusic = shuffleArray(music);
 
-    // Select required number from each category
     const selectedMovies = shuffledMovies.slice(0, 3);
     const selectedVideogames = shuffledVideogames.slice(0, 4);
     const selectedMusic = shuffledMusic.slice(0, 3);
 
-    // Combine and shuffle the final selection
     const selectedQuestions = shuffleArray([
       ...selectedMovies,
       ...selectedVideogames,
@@ -182,7 +171,6 @@ export function GamePage({ onComplete, onBack }: GamePageProps) {
 
   const handleNext = () => {
     if (selectedAnswer === null && !showResult) {
-      // Show result first
       setShowResult(true);
       if (selectedAnswer === currentQuestion.correctAnswer) {
         setScore(score + currentQuestion.points);
@@ -191,7 +179,6 @@ export function GamePage({ onComplete, onBack }: GamePageProps) {
     }
 
     if (showResult) {
-      // Move to next question or complete
       if (isLastQuestion) {
         const finalScore = selectedAnswer === currentQuestion.correctAnswer 
           ? score + currentQuestion.points 
@@ -203,7 +190,6 @@ export function GamePage({ onComplete, onBack }: GamePageProps) {
         setShowResult(false);
       }
     } else {
-      // Submit answer
       setShowResult(true);
       if (selectedAnswer === currentQuestion.correctAnswer) {
         setScore(score + currentQuestion.points);
@@ -227,7 +213,6 @@ export function GamePage({ onComplete, onBack }: GamePageProps) {
       };
     }
     
-    // After submit: green for correct, red for incorrect
     if (index === currentQuestion.correctAnswer) {
       return {
         background: 'linear-gradient(to bottom, #22c55e, #16a34a)',
@@ -259,7 +244,6 @@ export function GamePage({ onComplete, onBack }: GamePageProps) {
         : 'hover:border-[#7c3aed] hover:text-[#e9d5ff]';
     }
     
-    // After submit: add classes for correct/incorrect
     if (index === currentQuestion.correctAnswer) {
       return 'answer-correct';
     }
@@ -270,8 +254,6 @@ export function GamePage({ onComplete, onBack }: GamePageProps) {
     
     return '';
   };
-
-  // Show loading state while questions are being selected
   if (questions.length === 0) {
     return (
       <div className="pixel-container max-w-3xl w-full">
@@ -284,7 +266,6 @@ export function GamePage({ onComplete, onBack }: GamePageProps) {
 
   return (
     <div className="pixel-container max-w-3xl w-full">
-      {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <button onClick={onBack} className="pixel-button px-4 py-2 bg-gradient-to-b from-[#4c1d95] to-[#3b0764] border-[#6b21a8] text-[#c084fc] hover:from-[#581c87] hover:to-[#4c1d95]">
           ← BACK
@@ -294,7 +275,6 @@ export function GamePage({ onComplete, onBack }: GamePageProps) {
         </div>
       </div>
 
-      {/* Question Counter */}
       <div className="text-center mb-6">
         <p className="text-[#c084fc] mb-2 text-xs">QUESTION {currentQuestionIndex + 1} / {questions.length}</p>
         <div className="h-3 bg-[#1e1b4b] rounded-none overflow-hidden border-2 border-[#6b21a8]">
@@ -308,7 +288,6 @@ export function GamePage({ onComplete, onBack }: GamePageProps) {
         </div>
       </div>
 
-      {/* Category Badge */}
       <div className="text-center mb-6">
         <span 
           className="inline-block px-6 py-3 border-3 border-[#a855f7] text-xs font-bold"
@@ -324,7 +303,6 @@ export function GamePage({ onComplete, onBack }: GamePageProps) {
         </span>
       </div>
 
-      {/* Question */}
       <div className="mb-8 p-6 bg-gradient-to-b from-[#1e1b4b] to-[#110f2d] border-4 border-[#7c3aed] relative">
         <div className="absolute top-2 left-2 right-2 bottom-2 border border-[#6b21a8] pointer-events-none opacity-50"></div>
         <p className="text-[#e9d5ff] text-center leading-relaxed relative z-10">{currentQuestion.question}</p>
@@ -333,7 +311,6 @@ export function GamePage({ onComplete, onBack }: GamePageProps) {
         </div>
       </div>
 
-      {/* Options */}
       <div className="grid grid-cols-1 gap-4 mb-8">
         {currentQuestion.options.map((option, index) => {
           const buttonStyle = getButtonStyle(index);
@@ -371,7 +348,6 @@ export function GamePage({ onComplete, onBack }: GamePageProps) {
         })}
       </div>
 
-      {/* Next Button */}
       <button
         onClick={handleNext}
         disabled={selectedAnswer === null && !showResult}

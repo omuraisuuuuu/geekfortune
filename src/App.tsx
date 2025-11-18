@@ -33,7 +33,6 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Load user from Supabase on app load
     const loadUser = async () => {
       try {
         const savedUserId = localStorage.getItem('geekFortuneUserId');
@@ -55,7 +54,6 @@ function App() {
             });
             setCurrentPage('menu');
           } else {
-            // User not found, clear localStorage
             localStorage.removeItem('geekFortuneUserId');
           }
         }
@@ -71,7 +69,6 @@ function App() {
 
   const handleLogin = async (user: User) => {
     setCurrentUser(user);
-    // Save only user ID to localStorage
     localStorage.setItem('geekFortuneUserId', user.id);
     setCurrentPage('menu');
   };
@@ -86,7 +83,6 @@ function App() {
     if (!currentUser) return;
 
     try {
-      // Update user statistics in Supabase
       const updatedTotalScore = currentUser.totalScore + score;
       const updatedGamesPlayed = currentUser.gamesPlayed + 1;
       const updatedBestScore = Math.max(currentUser.bestScore, score);
@@ -106,7 +102,6 @@ function App() {
         return;
       }
 
-      // Update local state
       const updatedUser: User = {
         ...currentUser,
         totalScore: updatedTotalScore,
@@ -115,7 +110,6 @@ function App() {
       };
       setCurrentUser(updatedUser);
 
-      // Add entry to leaderboard in Supabase
       const { error: leaderboardError } = await supabase
         .from('leaderboard')
         .insert({
@@ -127,7 +121,6 @@ function App() {
 
       if (leaderboardError) {
         console.error('Error adding to leaderboard:', leaderboardError);
-        // Don't interrupt execution, as user statistics are already updated
       }
 
       setCurrentPage('menu');
@@ -136,8 +129,6 @@ function App() {
       alert('Error saving results. Please check your internet connection.');
     }
   };
-
-  // Show loading during initial user check
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#0a0015] flex items-center justify-center p-4">

@@ -6,12 +6,11 @@ export function MusicPlayer() {
   const [isMuted, setIsMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // Using a royalty-free 8-bit music URL (this is a placeholder - in production you'd host your own)
-  const musicUrl = 'https://cdn.pixabay.com/audio/2022/03/10/audio_4a3c2c0a8f.mp3'; // 8-bit style music
+  const musicUrl = 'https://cdn.pixabay.com/audio/2022/03/10/audio_4a3c2c0a8f.mp3';
 
   useEffect(() => {
     if (audioRef.current) {
-      audioRef.current.volume = 0.3; // Set to 30% volume
+      audioRef.current.volume = 0.3;
     }
   }, []);
 

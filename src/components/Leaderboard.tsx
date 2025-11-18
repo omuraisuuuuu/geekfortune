@@ -12,7 +12,6 @@ export function Leaderboard({ onBack }: LeaderboardProps) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Load leaderboard from Supabase
     const loadLeaderboard = async () => {
       try {
         setIsLoading(true);
@@ -65,7 +64,7 @@ export function Leaderboard({ onBack }: LeaderboardProps) {
           ← BACK
         </button>
         <h1 className="pixel-title text-4xl">LEADERBOARD</h1>
-        <div className="w-32" /> {/* Spacer */}
+        <div className="w-32" />
       </div>
 
       <div className="mb-8 text-center">

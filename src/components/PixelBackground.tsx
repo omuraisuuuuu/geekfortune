@@ -4,7 +4,6 @@ export function PixelBackground() {
   const [stars, setStars] = useState<Array<{ id: number; x: number; y: number; delay: number; size: number }>>([]);
 
   useEffect(() => {
-    // Generate random pixel stars
     const newStars = Array.from({ length: 50 }, (_, i) => ({
       id: i,
       x: Math.random() * 100,
@@ -33,7 +32,6 @@ export function PixelBackground() {
         ))}
       </div>
       
-      {/* Grid overlay */}
       <div 
         className="fixed inset-0 pointer-events-none z-0"
         style={{

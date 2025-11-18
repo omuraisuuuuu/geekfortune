@@ -17,10 +17,9 @@ export function Profile({ user, onBack }: ProfileProps) {
           ← BACK
         </button>
         <h1 className="pixel-title text-3xl">PROFILE</h1>
-        <div className="w-24" /> {/* Spacer */}
+        <div className="w-24" />
       </div>
 
-      {/* Avatar and Username */}
       <div className="text-center mb-8 p-8 bg-gradient-to-b from-[#1e1b4b] to-[#110f2d] border-4 border-[#7c3aed] relative">
         <div className="absolute top-3 left-3 right-3 bottom-3 border border-[#6b21a8] pointer-events-none opacity-30"></div>
         <div className="text-7xl mb-4 relative z-10">{user.avatar}</div>
@@ -28,7 +27,6 @@ export function Profile({ user, onBack }: ProfileProps) {
         <p className="text-[#7c3aed] text-xs relative z-10">GEEK FORTUNE PLAYER</p>
       </div>
 
-      {/* Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div className="pixel-button p-6 bg-gradient-to-b from-[#1e1b4b] to-[#110f2d] border-[#6b21a8] text-center">
           <p className="text-[#7c3aed] mb-2 text-xs">GAMES PLAYED</p>
@@ -53,7 +51,6 @@ export function Profile({ user, onBack }: ProfileProps) {
         </div>
       </div>
 
-      {/* Achievements Section */}
       <div className="p-6 bg-gradient-to-b from-[#1e1b4b] to-[#110f2d] border-4 border-[#6b21a8] relative">
         <div className="absolute top-2 left-2 right-2 bottom-2 border border-[#6b21a8] pointer-events-none opacity-30"></div>
         <h3 className="text-[#c084fc] mb-4 text-center relative z-10">★ ACHIEVEMENTS ★</h3>

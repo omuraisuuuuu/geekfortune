@@ -35,10 +35,8 @@ export function LoginPage({ onLogin }: LoginPageProps) {
 
     try {
       if (isRegistering) {
-        // Hash the password before storing
         const passwordHash = await hashPassword(password);
         
-        // Register new user in Supabase
         const { data, error: insertError } = await supabase
           .from('users')
           .insert({
@@ -54,7 +52,6 @@ export function LoginPage({ onLogin }: LoginPageProps) {
 
         if (insertError) {
           if (insertError.code === '23505') {
-            // Uniqueness error (username already exists)
             setError('This username is already taken. Please choose another one.');
           } else {
             setError('Registration error. Please try again.');
@@ -76,7 +73,6 @@ export function LoginPage({ onLogin }: LoginPageProps) {
           onLogin(newUser);
         }
       } else {
-        // Login existing user from Supabase
         const { data, error: selectError } = await supabase
           .from('users')
           .select('*')
@@ -89,7 +85,6 @@ export function LoginPage({ onLogin }: LoginPageProps) {
           return;
         }
 
-        // Verify password
         if (!data.password_hash) {
           setError('This account has no password set. Please register a new account.');
           setIsLoading(false);
