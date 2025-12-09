@@ -1,8 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { GameMode, User } from '../App';
+import { supabase } from '../lib/supabase';
 
 interface GamePageProps {
-  onComplete: (score: number) => void;
+  mode: GameMode;
+  user: User;
+  onComplete: (score: number, mode: GameMode) => void;
   onBack: () => void;
+}
+
+type Difficulty = 'easy' | 'medium' | 'hard';
+
+interface RawQuestion {
+  question: string;
+  correct_answer: string;
+  options: string[];
+  difficulty: Difficulty;
 }
 
 interface Question {
@@ -10,9 +23,19 @@ interface Question {
   question: string;
   options: string[];
   correctAnswer: number;
-  category: 'videogames' | 'music' | 'movies';
+  difficulty: Difficulty;
   points: number;
 }
+
+type AbilityKey = 'fifty' | 'freeze' | 'dangerous' | 'skip';
+
+const abilityCost = 500;
+
+const difficultyPoints: Record<Difficulty, number> = {
+  easy: 100,
+  medium: 200,
+  hard: 300,
+};
 
 const shuffleArray = <T,>(array: T[]): T[] => {
   const shuffled = [...array];
@@ -23,321 +46,831 @@ const shuffleArray = <T,>(array: T[]): T[] => {
   return shuffled;
 };
 
-const allQuestions: Question[] = [
-  { id: 1, question: "Who directed 'The Matrix' trilogy?", options: ["Spielberg", "The Wachowskis", "Nolan", "Cameron"], correctAnswer: 1, category: 'movies', points: 100 },
-  { id: 2, question: "Which movie won the Oscar for Best Picture in 1994?", options: ["Pulp Fiction", "Forrest Gump", "The Shawshank Redemption", "Quiz Show"], correctAnswer: 1, category: 'movies', points: 100 },
-  { id: 3, question: "What is the highest-grossing film of all time (unadjusted)?", options: ["Titanic", "Avatar", "Avengers: Endgame", "Star Wars"], correctAnswer: 1, category: 'movies', points: 100 },
-  { id: 4, question: "Who played the Joker in 'The Dark Knight'?", options: ["Heath Ledger", "Joaquin Phoenix", "Jack Nicholson", "Jared Leto"], correctAnswer: 0, category: 'movies', points: 100 },
-  { id: 5, question: "What is the name of the main character in 'Forrest Gump'?", options: ["Forrest Gump", "Tom Hanks", "Bubba", "Lieutenant Dan"], correctAnswer: 0, category: 'movies', points: 100 },
-  { id: 6, question: "Which movie features the quote 'May the Force be with you'?", options: ["Star Trek", "Star Wars", "Guardians of the Galaxy", "Dune"], correctAnswer: 1, category: 'movies', points: 100 },
-  { id: 7, question: "Who directed 'Inception'?", options: ["Christopher Nolan", "Steven Spielberg", "Quentin Tarantino", "Martin Scorsese"], correctAnswer: 0, category: 'movies', points: 100 },
-  { id: 8, question: "What year was 'The Godfather' released?", options: ["1970", "1971", "1972", "1973"], correctAnswer: 2, category: 'movies', points: 100 },
-  { id: 9, question: "Which actor played Iron Man in the MCU?", options: ["Chris Evans", "Robert Downey Jr.", "Chris Hemsworth", "Mark Ruffalo"], correctAnswer: 1, category: 'movies', points: 100 },
-  { id: 10, question: "What is the name of the ship in 'Titanic'?", options: ["Titanic", "Olympic", "Britannic", "Lusitania"], correctAnswer: 0, category: 'movies', points: 100 },
-  { id: 11, question: "Who directed 'Pulp Fiction'?", options: ["Martin Scorsese", "Quentin Tarantino", "David Fincher", "Coen Brothers"], correctAnswer: 1, category: 'movies', points: 100 },
-  { id: 12, question: "Which movie features a character named Jack Sparrow?", options: ["Pirates of the Caribbean", "Master and Commander", "Moby Dick", "Treasure Island"], correctAnswer: 0, category: 'movies', points: 100 },
-  { id: 13, question: "What is the name of the main character in 'The Lord of the Rings'?", options: ["Gandalf", "Frodo", "Aragorn", "Legolas"], correctAnswer: 1, category: 'movies', points: 100 },
-  { id: 14, question: "Who played Harry Potter in the film series?", options: ["Daniel Radcliffe", "Rupert Grint", "Tom Felton", "Tom Hiddleston"], correctAnswer: 0, category: 'movies', points: 100 },
-  { id: 15, question: "Which movie features the quote 'I'll be back'?", options: ["Terminator", "Predator", "Commando", "Total Recall"], correctAnswer: 0, category: 'movies', points: 100 },
-  { id: 16, question: "Who directed 'Jurassic Park'?", options: ["George Lucas", "Steven Spielberg", "James Cameron", "Ridley Scott"], correctAnswer: 1, category: 'movies', points: 100 },
-  { id: 17, question: "What is the name of the main character in 'The Lion King'?", options: ["Simba", "Mufasa", "Scar", "Timon"], correctAnswer: 0, category: 'movies', points: 100 },
-  { id: 18, question: "Which movie won Best Picture in 2020?", options: ["1917", "Parasite", "Joker", "Once Upon a Time in Hollywood"], correctAnswer: 1, category: 'movies', points: 100 },
-  { id: 19, question: "Who played the main character in 'The Revenant'?", options: ["Tom Hardy", "Leonardo DiCaprio", "Brad Pitt", "Christian Bale"], correctAnswer: 1, category: 'movies', points: 100 },
-  { id: 20, question: "What is the name of the main character in 'Frozen'?", options: ["Elsa", "Anna", "Olaf", "Kristoff"], correctAnswer: 0, category: 'movies', points: 100 },
-  { id: 21, question: "Which movie features the quote 'Here's looking at you, kid'?", options: ["Casablanca", "The Maltese Falcon", "Citizen Kane", "Gone with the Wind"], correctAnswer: 0, category: 'movies', points: 100 },
-  { id: 22, question: "Who directed 'The Avengers' (2012)?", options: ["Joss Whedon", "Russo Brothers", "James Gunn", "Taika Waititi"], correctAnswer: 0, category: 'movies', points: 100 },
-  { id: 23, question: "What is the name of the main character in 'The Matrix'?", options: ["Neo", "Morpheus", "Trinity", "Agent Smith"], correctAnswer: 0, category: 'movies', points: 100 },
-  { id: 24, question: "Which movie features a character named Tony Stark?", options: ["Iron Man", "Captain America", "Thor", "Hulk"], correctAnswer: 0, category: 'movies', points: 100 },
-  { id: 25, question: "Who played the Joker in 'Joker' (2019)?", options: ["Heath Ledger", "Joaquin Phoenix", "Jack Nicholson", "Jared Leto"], correctAnswer: 1, category: 'movies', points: 100 },
-  { id: 26, question: "What is the name of the main character in 'The Hunger Games'?", options: ["Katniss", "Peeta", "Gale", "Prim"], correctAnswer: 0, category: 'movies', points: 100 },
-  { id: 27, question: "Which movie features the quote 'You can't handle the truth!'?", options: ["A Few Good Men", "The Departed", "Goodfellas", "The Godfather"], correctAnswer: 0, category: 'movies', points: 100 },
-  { id: 28, question: "Who directed 'Interstellar'?", options: ["Christopher Nolan", "Denis Villeneuve", "Ridley Scott", "Danny Boyle"], correctAnswer: 0, category: 'movies', points: 100 },
-  { id: 29, question: "What is the name of the main character in 'The Dark Knight'?", options: ["Batman", "Bruce Wayne", "Joker", "Harvey Dent"], correctAnswer: 1, category: 'movies', points: 100 },
-  { id: 30, question: "Which movie features a character named Luke Skywalker?", options: ["Star Wars", "Star Trek", "Guardians of the Galaxy", "Dune"], correctAnswer: 0, category: 'movies', points: 100 },
-  { id: 31, question: "Which game series features a plumber saving a princess?", options: ["Sonic", "Super Mario", "Mega Man", "Zelda"], correctAnswer: 1, category: 'videogames', points: 100 },
-  { id: 32, question: "What is the name of the main character in 'The Legend of Zelda'?", options: ["Zelda", "Link", "Ganon", "Epona"], correctAnswer: 1, category: 'videogames', points: 100 },
-  { id: 33, question: "In 'Portal', what is the name of the AI antagonist?", options: ["HAL 9000", "GLaDOS", "SHODAN", "Cortana"], correctAnswer: 1, category: 'videogames', points: 100 },
-  { id: 34, question: "Which game features a character named Master Chief?", options: ["Call of Duty", "Halo", "Gears of War", "Destiny"], correctAnswer: 1, category: 'videogames', points: 100 },
-  { id: 35, question: "What is the name of the main character in 'Minecraft'?", options: ["Steve", "Alex", "Notch", "Herobrine"], correctAnswer: 0, category: 'videogames', points: 100 },
-  { id: 36, question: "Which game series features a character named Kratos?", options: ["God of War", "Devil May Cry", "Bayonetta", "Darksiders"], correctAnswer: 0, category: 'videogames', points: 100 },
-  { id: 37, question: "What is the name of the main character in 'Tomb Raider'?", options: ["Lara Croft", "Nathan Drake", "Indiana Jones", "Elena Fisher"], correctAnswer: 0, category: 'videogames', points: 100 },
-  { id: 38, question: "Which game features a character named Geralt of Rivia?", options: ["The Witcher", "Skyrim", "Dragon Age", "Dark Souls"], correctAnswer: 0, category: 'videogames', points: 100 },
-  { id: 39, question: "What is the name of the main character in 'Assassin's Creed'?", options: ["Ezio", "Altair", "Connor", "Edward"], correctAnswer: 1, category: 'videogames', points: 100 },
-  { id: 40, question: "Which game features a character named Solid Snake?", options: ["Metal Gear Solid", "Splinter Cell", "Hitman", "Deus Ex"], correctAnswer: 0, category: 'videogames', points: 100 },
-  { id: 41, question: "What is the name of the main character in 'Half-Life'?", options: ["Gordon Freeman", "Alyx Vance", "G-Man", "Barney"], correctAnswer: 0, category: 'videogames', points: 100 },
-  { id: 42, question: "Which game features a character named Cloud Strife?", options: ["Final Fantasy VII", "Final Fantasy X", "Kingdom Hearts", "Chrono Trigger"], correctAnswer: 0, category: 'videogames', points: 100 },
-  { id: 43, question: "What is the name of the main character in 'Doom'?", options: ["Doomguy", "Doom Slayer", "Marine", "Hell Walker"], correctAnswer: 0, category: 'videogames', points: 100 },
-  { id: 44, question: "Which game features a character named Mario?", options: ["Super Mario Bros", "Sonic the Hedgehog", "Crash Bandicoot", "Spyro"], correctAnswer: 0, category: 'videogames', points: 100 },
-  { id: 45, question: "What is the name of the main character in 'BioShock'?", options: ["Jack", "Booker", "Elizabeth", "Atlas"], correctAnswer: 0, category: 'videogames', points: 100 },
-  { id: 46, question: "Which game features a character named Samus Aran?", options: ["Metroid", "Castlevania", "Contra", "Mega Man"], correctAnswer: 0, category: 'videogames', points: 100 },
-  { id: 47, question: "What is the name of the main character in 'The Last of Us'?", options: ["Joel", "Ellie", "Tess", "Tommy"], correctAnswer: 0, category: 'videogames', points: 100 },
-  { id: 48, question: "Which game features a character named Commander Shepard?", options: ["Mass Effect", "Star Wars: KOTOR", "Dragon Age", "Fallout"], correctAnswer: 0, category: 'videogames', points: 100 },
-  { id: 49, question: "What is the name of the main character in 'Red Dead Redemption'?", options: ["John Marston", "Arthur Morgan", "Dutch", "Micah"], correctAnswer: 0, category: 'videogames', points: 100 },
-  { id: 50, question: "Which game features a character named Nathan Drake?", options: ["Uncharted", "Tomb Raider", "Indiana Jones", "Assassin's Creed"], correctAnswer: 0, category: 'videogames', points: 100 },
-  { id: 51, question: "What is the name of the main character in 'Fallout'?", options: ["Vault Dweller", "Lone Wanderer", "Sole Survivor", "Courier"], correctAnswer: 0, category: 'videogames', points: 100 },
-  { id: 52, question: "Which game features a character named Pikachu?", options: ["Pokémon", "Digimon", "Yokai Watch", "Temtem"], correctAnswer: 0, category: 'videogames', points: 100 },
-  { id: 53, question: "What is the name of the main character in 'Sonic the Hedgehog'?", options: ["Sonic", "Tails", "Knuckles", "Shadow"], correctAnswer: 0, category: 'videogames', points: 100 },
-  { id: 54, question: "Which game features a character named Crash Bandicoot?", options: ["Crash Bandicoot", "Spyro", "Sonic", "Mario"], correctAnswer: 0, category: 'videogames', points: 100 },
-  { id: 55, question: "What is the name of the main character in 'Resident Evil'?", options: ["Chris Redfield", "Jill Valentine", "Leon Kennedy", "Claire Redfield"], correctAnswer: 0, category: 'videogames', points: 100 },
-  { id: 56, question: "Which game features a character named Kratos?", options: ["God of War", "Devil May Cry", "Bayonetta", "Darksiders"], correctAnswer: 0, category: 'videogames', points: 100 },
-  { id: 57, question: "What is the name of the main character in 'Street Fighter'?", options: ["Ryu", "Ken", "Chun-Li", "Guile"], correctAnswer: 0, category: 'videogames', points: 100 },
-  { id: 58, question: "Which game features a character named Pac-Man?", options: ["Pac-Man", "Ms. Pac-Man", "Dig Dug", "Galaga"], correctAnswer: 0, category: 'videogames', points: 100 },
-  { id: 59, question: "What is the name of the main character in 'Tetris'?", options: ["No character", "Tetris", "Block", "Square"], correctAnswer: 0, category: 'videogames', points: 100 },
-  { id: 60, question: "Which game features a character named Master Chief?", options: ["Halo", "Call of Duty", "Gears of War", "Destiny"], correctAnswer: 0, category: 'videogames', points: 100 },
-  { id: 61, question: "What is the name of the main character in 'Grand Theft Auto V'?", options: ["Michael", "Trevor", "Franklin", "All of them"], correctAnswer: 3, category: 'videogames', points: 100 },
-  { id: 62, question: "Which game features a character named Ezio Auditore?", options: ["Assassin's Creed", "Prince of Persia", "Tomb Raider", "Uncharted"], correctAnswer: 0, category: 'videogames', points: 100 },
-  { id: 63, question: "What is the name of the main character in 'Borderlands'?", options: ["Vault Hunter", "Lilith", "Mordecai", "Roland"], correctAnswer: 0, category: 'videogames', points: 100 },
-  { id: 64, question: "Which game features a character named Cortana?", options: ["Halo", "Mass Effect", "Deus Ex", "System Shock"], correctAnswer: 0, category: 'videogames', points: 100 },
-  { id: 65, question: "What is the name of the main character in 'Dead Space'?", options: ["Isaac Clarke", "Ellie Langford", "John Carver", "Nicole Brennan"], correctAnswer: 0, category: 'videogames', points: 100 },
-  { id: 66, question: "Which game features a character named Aloy?", options: ["Horizon Zero Dawn", "Tomb Raider", "Assassin's Creed", "The Last of Us"], correctAnswer: 0, category: 'videogames', points: 100 },
-  { id: 67, question: "What is the name of the main character in 'Dishonored'?", options: ["Corvo Attano", "Emily Kaldwin", "Daud", "The Outsider"], correctAnswer: 0, category: 'videogames', points: 100 },
-  { id: 68, question: "Which game features a character named Jin Sakai?", options: ["Ghost of Tsushima", "Sekiro", "Nioh", "Onimusha"], correctAnswer: 0, category: 'videogames', points: 100 },
-  { id: 69, question: "What is the name of the main character in 'Control'?", options: ["Jesse Faden", "Dylan Faden", "Dr. Casper Darling", "Ahti"], correctAnswer: 0, category: 'videogames', points: 100 },
-  { id: 70, question: "Which game features a character named Bayek?", options: ["Assassin's Creed Origins", "Assassin's Creed Odyssey", "Assassin's Creed Valhalla", "Assassin's Creed Unity"], correctAnswer: 0, category: 'videogames', points: 100 },
-  { id: 71, question: "Which band released 'Bohemian Rhapsody'?", options: ["The Beatles", "Led Zeppelin", "Queen", "Pink Floyd"], correctAnswer: 2, category: 'music', points: 100 },
-  { id: 72, question: "What was Nirvana's breakthrough album?", options: ["Bleach", "Nevermind", "In Utero", "MTV Unplugged"], correctAnswer: 1, category: 'music', points: 100 },
-  { id: 73, question: "Which composer created the 'Star Wars' soundtrack?", options: ["Hans Zimmer", "John Williams", "Ennio Morricone", "Danny Elfman"], correctAnswer: 1, category: 'music', points: 100 },
-  { id: 74, question: "Who sang 'Billie Jean'?", options: ["Michael Jackson", "Prince", "Stevie Wonder", "Marvin Gaye"], correctAnswer: 0, category: 'music', points: 100 },
-  { id: 75, question: "Which band released 'Stairway to Heaven'?", options: ["The Beatles", "Led Zeppelin", "Pink Floyd", "The Rolling Stones"], correctAnswer: 1, category: 'music', points: 100 },
-  { id: 76, question: "What is the name of Taylor Swift's first album?", options: ["Taylor Swift", "Fearless", "Speak Now", "Red"], correctAnswer: 0, category: 'music', points: 100 },
-  { id: 77, question: "Which artist released 'Thriller'?", options: ["Michael Jackson", "Prince", "Madonna", "Whitney Houston"], correctAnswer: 0, category: 'music', points: 100 },
-  { id: 78, question: "Who sang 'Like a Rolling Stone'?", options: ["Bob Dylan", "The Rolling Stones", "The Beatles", "The Who"], correctAnswer: 0, category: 'music', points: 100 },
-  { id: 79, question: "Which band released 'Hotel California'?", options: ["The Eagles", "Fleetwood Mac", "The Doors", "Lynyrd Skynyrd"], correctAnswer: 0, category: 'music', points: 100 },
-  { id: 80, question: "What is the name of The Beatles' first album?", options: ["Please Please Me", "With The Beatles", "A Hard Day's Night", "Beatles for Sale"], correctAnswer: 0, category: 'music', points: 100 },
-  { id: 81, question: "Which artist released 'Purple Rain'?", options: ["Michael Jackson", "Prince", "David Bowie", "Elton John"], correctAnswer: 1, category: 'music', points: 100 },
-  { id: 82, question: "Who sang 'Imagine'?", options: ["John Lennon", "Paul McCartney", "George Harrison", "Ringo Starr"], correctAnswer: 0, category: 'music', points: 100 },
-  { id: 83, question: "Which band released 'The Dark Side of the Moon'?", options: ["The Beatles", "Led Zeppelin", "Pink Floyd", "The Rolling Stones"], correctAnswer: 2, category: 'music', points: 100 },
-  { id: 84, question: "What is the name of Adele's first album?", options: ["19", "21", "25", "30"], correctAnswer: 0, category: 'music', points: 100 },
-  { id: 85, question: "Which artist released 'Bad'?", options: ["Michael Jackson", "Prince", "Madonna", "Whitney Houston"], correctAnswer: 0, category: 'music', points: 100 },
-  { id: 86, question: "Who sang 'Sweet Child O' Mine'?", options: ["Guns N' Roses", "Aerosmith", "AC/DC", "Van Halen"], correctAnswer: 0, category: 'music', points: 100 },
-  { id: 87, question: "Which band released 'Back in Black'?", options: ["AC/DC", "Led Zeppelin", "Black Sabbath", "Deep Purple"], correctAnswer: 0, category: 'music', points: 100 },
-  { id: 88, question: "What is the name of Eminem's first album?", options: ["Infinite", "The Slim Shady LP", "The Marshall Mathers LP", "The Eminem Show"], correctAnswer: 0, category: 'music', points: 100 },
-  { id: 89, question: "Which artist released 'Like a Virgin'?", options: ["Madonna", "Cyndi Lauper", "Tina Turner", "Whitney Houston"], correctAnswer: 0, category: 'music', points: 100 },
-  { id: 90, question: "Who sang 'Smells Like Teen Spirit'?", options: ["Nirvana", "Pearl Jam", "Soundgarden", "Alice in Chains"], correctAnswer: 0, category: 'music', points: 100 },
-  { id: 91, question: "Which band released 'Sgt. Pepper's Lonely Hearts Club Band'?", options: ["The Beatles", "The Rolling Stones", "The Who", "The Kinks"], correctAnswer: 0, category: 'music', points: 100 },
-  { id: 92, question: "What is the name of Beyoncé's first solo album?", options: ["Dangerously in Love", "B'Day", "I Am... Sasha Fierce", "4"], correctAnswer: 0, category: 'music', points: 100 },
-  { id: 93, question: "Which artist released 'The Wall'?", options: ["Pink Floyd", "Led Zeppelin", "The Beatles", "The Rolling Stones"], correctAnswer: 0, category: 'music', points: 100 },
-  { id: 94, question: "Who sang 'Hey Jude'?", options: ["The Beatles", "The Rolling Stones", "The Who", "The Kinks"], correctAnswer: 0, category: 'music', points: 100 },
-  { id: 95, question: "Which band released 'Abbey Road'?", options: ["The Beatles", "The Rolling Stones", "The Who", "The Kinks"], correctAnswer: 0, category: 'music', points: 100 },
-  { id: 96, question: "What is the name of Drake's first album?", options: ["Thank Me Later", "Take Care", "Nothing Was the Same", "Views"], correctAnswer: 0, category: 'music', points: 100 },
-  { id: 97, question: "Which artist released 'Rumours'?", options: ["Fleetwood Mac", "The Eagles", "The Doors", "Lynyrd Skynyrd"], correctAnswer: 0, category: 'music', points: 100 },
-  { id: 98, question: "Who sang 'Wonderwall'?", options: ["Oasis", "Blur", "Radiohead", "The Verve"], correctAnswer: 0, category: 'music', points: 100 },
-  { id: 99, question: "Which band released 'OK Computer'?", options: ["Radiohead", "Oasis", "Blur", "The Verve"], correctAnswer: 0, category: 'music', points: 100 },
-  { id: 100, question: "What is the name of The Weeknd's first album?", options: ["Kiss Land", "Beauty Behind the Madness", "Starboy", "After Hours"], correctAnswer: 0, category: 'music', points: 100 },
-];
+const prepareQuestions = (data: RawQuestion[]): Question[] =>
+  data.map((item, idx) => {
+    const options = shuffleArray(item.options);
+    const correctIndex = options.indexOf(item.correct_answer);
+    return {
+      id: idx,
+      question: item.question,
+      options,
+      correctAnswer: correctIndex === -1 ? 0 : correctIndex,
+      difficulty: item.difficulty,
+      points: difficultyPoints[item.difficulty],
+    };
+  });
 
-const categoryColors = {
-  videogames: '#a855f7',
-  music: '#c084fc',
-  movies: '#e9d5ff',
+const difficultyColors: Record<Difficulty, string> = {
+  easy: '#22c55e',
+  medium: '#eab308',
+  hard: '#ef4444',
 };
 
-export function GamePage({ onComplete, onBack }: GamePageProps) {
+export function GamePage({ mode, user, onComplete, onBack }: GamePageProps) {
+  const [questionBank, setQuestionBank] = useState<Question[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(30);
+  const [isTimerFrozen, setIsTimerFrozen] = useState(false);
+  const [disabledOptions, setDisabledOptions] = useState<number[]>([]);
+  const [abilityCharges, setAbilityCharges] = useState({
+    fifty: 1,
+    freeze: 1,
+    dangerous: 1,
+    skip: 1,
+  });
+  const [dangerousActive, setDangerousActive] = useState(false);
+  const [lives, setLives] = useState(mode === 'endless' ? 3 : 0);
+  const [answeredCount, setAnsweredCount] = useState(0);
+  const [loadingQuestions, setLoadingQuestions] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [hasFinished, setHasFinished] = useState(false);
+  const [showEndModal, setShowEndModal] = useState(false);
+  const [leaderboardPosition, setLeaderboardPosition] = useState<number | null>(null);
+  const [finalScore, setFinalScore] = useState(0);
+  
+  const [showCountdown, setShowCountdown] = useState(true);
+  const [countdownValue, setCountdownValue] = useState<number | 'GO'>(3);
+  const [countdownAudio] = useState(() => new Audio('/music/countdown.mp3'));
+  
+  const [quizVisible, setQuizVisible] = useState(false);
+
+  const modeBestScore = useMemo(() => {
+    switch (mode) {
+      case 'quick': return user.bestScoreQuick || 0;
+      case 'standard': return user.bestScoreStandard || 0;
+      case 'endless': return user.bestScoreEndless || 0;
+      default: return 0;
+    }
+  }, [mode, user]);
+
+  const isNewBestScore = finalScore > modeBestScore;
 
   useEffect(() => {
-    const movies = allQuestions.filter(q => q.category === 'movies');
-    const videogames = allQuestions.filter(q => q.category === 'videogames');
-    const music = allQuestions.filter(q => q.category === 'music');
-
-    const shuffledMovies = shuffleArray(movies);
-    const shuffledVideogames = shuffleArray(videogames);
-    const shuffledMusic = shuffleArray(music);
-
-    const selectedMovies = shuffledMovies.slice(0, 3);
-    const selectedVideogames = shuffledVideogames.slice(0, 4);
-    const selectedMusic = shuffledMusic.slice(0, 3);
-
-    const selectedQuestions = shuffleArray([
-      ...selectedMovies,
-      ...selectedVideogames,
-      ...selectedMusic
-    ]);
-
-    setQuestions(selectedQuestions);
+    const load = async () => {
+      setLoadingQuestions(true);
+      setLoadError('');
+      try {
+        const response = await fetch('/questions_with_difficulty.json');
+        const data = (await response.json()) as RawQuestion[];
+        setQuestionBank(prepareQuestions(data));
+      } catch {
+        setLoadError('Failed to load questions. Please try again.');
+      } finally {
+        setLoadingQuestions(false);
+      }
+    };
+    load();
   }, []);
 
-  const currentQuestion = questions[currentQuestionIndex];
-  const isLastQuestion = currentQuestionIndex === questions.length - 1;
+  // Countdown effect
+  useEffect(() => {
+    if (!showCountdown || loadingQuestions) return;
+    
+    countdownAudio.currentTime = 0;
+    countdownAudio.volume = 0.7;
+    countdownAudio.play().catch(() => {});
+    
+    const timings = [
+      { delay: 0, value: 3 },
+      { delay: 1000, value: 2 },
+      { delay: 2000, value: 1 },
+      { delay: 3000, value: 'GO' as const },
+      { delay: 4000, value: null },
+    ];
+    
+    const timeouts = timings.map(({ delay, value }) =>
+      setTimeout(() => {
+        if (value === null) {
+          setShowCountdown(false);
+          setTimeout(() => setQuizVisible(true), 50);
+        } else {
+          setCountdownValue(value);
+        }
+      }, delay)
+    );
+    
+    return () => {
+      timeouts.forEach(clearTimeout);
+    };
+  }, [showCountdown, loadingQuestions, countdownAudio]);
 
-  const handleAnswerSelect = (answerIndex: number) => {
-    if (showResult) return;
-    setSelectedAnswer(answerIndex);
+  useEffect(() => {
+    if (!questionBank.length) return;
+    
+    let selectedQuestions: Question[] = [];
+    
+    if (mode === 'quick') {
+      const easy = shuffleArray(questionBank.filter(q => q.difficulty === 'easy')).slice(0, 3);
+      const medium = shuffleArray(questionBank.filter(q => q.difficulty === 'medium')).slice(0, 4);
+      const hard = shuffleArray(questionBank.filter(q => q.difficulty === 'hard')).slice(0, 3);
+      selectedQuestions = [...easy, ...medium, ...hard];
+    } else if (mode === 'standard') {
+      const easy = shuffleArray(questionBank.filter(q => q.difficulty === 'easy')).slice(0, 10);
+      const medium = shuffleArray(questionBank.filter(q => q.difficulty === 'medium')).slice(0, 10);
+      const hard = shuffleArray(questionBank.filter(q => q.difficulty === 'hard')).slice(0, 10);
+      selectedQuestions = [...easy, ...medium, ...hard];
+    } else {
+      selectedQuestions = shuffleArray(questionBank);
+    }
+    
+    setQuestions(selectedQuestions);
+    setCurrentQuestionIndex(0);
+    setScore(0);
+    setSelectedAnswer(null);
+    setShowResult(false);
+    setTimeLeft(30);
+    setIsTimerFrozen(false);
+    setDisabledOptions([]);
+    setAbilityCharges({
+      fifty: 1,
+      freeze: 1,
+      dangerous: 1,
+      skip: 1,
+    });
+    setDangerousActive(false);
+    setLives(mode === 'endless' ? 3 : 0);
+    setAnsweredCount(0);
+    setHasFinished(false);
+  }, [mode, questionBank]);
+
+  const currentQuestion = questions[currentQuestionIndex];
+  const isLastQuestion = useMemo(
+    () => mode !== 'endless' && currentQuestionIndex === questions.length - 1,
+    [mode, currentQuestionIndex, questions.length],
+  );
+
+  const handleTimeExpired = useCallback(() => {
+    if (showResult || hasFinished || !currentQuestion) return;
+    if (mode === 'endless') {
+      setLives(prev => prev - 1);
+    }
+    setAnsweredCount(prev => prev + 1);
+    setShowResult(true);
+    setDangerousActive(false);
+  }, [showResult, hasFinished, currentQuestion, mode]);
+
+  useEffect(() => {
+    if (!currentQuestion || showResult || isTimerFrozen || hasFinished) return;
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          handleTimeExpired();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [currentQuestion, showResult, isTimerFrozen, hasFinished, handleTimeExpired]);
+
+  const handleGameEnd = useCallback(async (endScore: number) => {
+    setFinalScore(endScore);
+    setHasFinished(true);
+    
+    try {
+      const modeTable = mode === 'quick' ? 'quick_leaderboard' : mode === 'standard' ? 'standard_leaderboard' : 'endless_leaderboard';
+      const { count, error } = await supabase
+        .from(modeTable)
+        .select('*', { count: 'exact', head: true })
+        .gt('score', endScore);
+      
+      if (!error && count !== null) {
+        setLeaderboardPosition(count + 1);
+      }
+    } catch (e) {
+      console.error('Error fetching leaderboard position:', e);
+    }
+    
+    setShowEndModal(true);
+  }, [mode]);
+
+  useEffect(() => {
+    if (mode === 'endless' && lives <= 0 && !hasFinished) {
+      handleGameEnd(score);
+    }
+  }, [lives, mode, hasFinished, handleGameEnd, score]);
+
+  const handleAnswerSelect = (index: number) => {
+    if (showResult || disabledOptions.includes(index)) return;
+    setSelectedAnswer(index);
   };
 
-  const handleNext = () => {
-    if (selectedAnswer === null && !showResult) {
-      setShowResult(true);
-      if (selectedAnswer === currentQuestion.correctAnswer) {
-        setScore(score + currentQuestion.points);
-      }
+  const evaluateAnswer = () => {
+    if (!currentQuestion || showResult || selectedAnswer === null) return;
+    const isCorrect = selectedAnswer === currentQuestion.correctAnswer;
+    const delta =
+      selectedAnswer === null
+        ? 0
+        : isCorrect
+          ? currentQuestion.points * (dangerousActive ? 2 : 1)
+          : dangerousActive
+            ? -currentQuestion.points
+            : 0;
+    setScore(prev => prev + delta);
+    if (mode === 'endless' && (!isCorrect || selectedAnswer === null)) {
+      setLives(prev => prev - 1);
+    }
+    setAnsweredCount(prev => prev + 1);
+    setShowResult(true);
+    setIsTimerFrozen(true);
+  };
+
+  const goToNextQuestion = () => {
+    if (!questions.length || hasFinished) return;
+    if (mode !== 'endless' && isLastQuestion) {
+      handleGameEnd(score);
       return;
     }
+    const nextIndex =
+      mode === 'endless'
+        ? (currentQuestionIndex + 1) % questions.length
+        : currentQuestionIndex + 1;
+    setCurrentQuestionIndex(nextIndex);
+    setSelectedAnswer(null);
+    setShowResult(false);
+    setDisabledOptions([]);
+    setDangerousActive(false);
+    setTimeLeft(30);
+    setIsTimerFrozen(false);
+  };
 
-    if (showResult) {
-      if (isLastQuestion) {
-        const finalScore = selectedAnswer === currentQuestion.correctAnswer 
-          ? score + currentQuestion.points 
-          : score;
-        onComplete(finalScore);
-      } else {
-        setCurrentQuestionIndex(currentQuestionIndex + 1);
-        setSelectedAnswer(null);
-        setShowResult(false);
-      }
+  const handleUseFifty = () => {
+    if (!currentQuestion || abilityCharges.fifty === 0 || showResult) return;
+    const incorrect = currentQuestion.options
+      .map((_, idx) => idx)
+      .filter(idx => idx !== currentQuestion.correctAnswer);
+    const toDisable = shuffleArray(incorrect).slice(0, 2);
+    setDisabledOptions(toDisable);
+    if (selectedAnswer !== null && toDisable.includes(selectedAnswer)) {
+      setSelectedAnswer(null);
+    }
+    setAbilityCharges(prev => ({ ...prev, fifty: prev.fifty - 1 }));
+  };
+
+  const handleUseFreeze = () => {
+    if (abilityCharges.freeze === 0 || isTimerFrozen || showResult) return;
+    setIsTimerFrozen(true);
+    setAbilityCharges(prev => ({ ...prev, freeze: prev.freeze - 1 }));
+  };
+
+  const handleUseDangerous = () => {
+    if (abilityCharges.dangerous === 0 || showResult || dangerousActive) return;
+    setDangerousActive(true);
+    setAbilityCharges(prev => ({ ...prev, dangerous: prev.dangerous - 1 }));
+  };
+
+  const handleUseSkip = () => {
+    if (abilityCharges.skip === 0 || hasFinished || !questions.length) return;
+    const finishing = mode !== 'endless' && isLastQuestion;
+    setAbilityCharges(prev => ({ ...prev, skip: prev.skip - 1 }));
+    setAnsweredCount(prev => prev + 1);
+    if (finishing) {
+      handleGameEnd(score);
+      return;
+    }
+    const nextIndex =
+      mode === 'endless'
+        ? (currentQuestionIndex + 1) % questions.length
+        : currentQuestionIndex + 1;
+    setCurrentQuestionIndex(nextIndex);
+    setSelectedAnswer(null);
+    setShowResult(false);
+    setDisabledOptions([]);
+    setDangerousActive(false);
+    setTimeLeft(30);
+    setIsTimerFrozen(false);
+  };
+
+  const handlePurchaseAbility = (key: AbilityKey) => {
+    if (score < abilityCost) return;
+    setScore(prev => prev - abilityCost);
+    setAbilityCharges(prev => ({ ...prev, [key]: prev[key] + 1 }));
+  };
+
+  const handleMainButton = () => {
+    if (!showResult) {
+      evaluateAnswer();
     } else {
-      setShowResult(true);
-      if (selectedAnswer === currentQuestion.correctAnswer) {
-        setScore(score + currentQuestion.points);
-      }
+      goToNextQuestion();
     }
   };
 
-  const getButtonStyle = (index: number) => {
-    if (!showResult) {
-      if (selectedAnswer === index) {
-        return {
-          background: 'linear-gradient(to bottom, #7c3aed, #6b21a8)',
-          borderColor: '#a855f7',
-          color: '#e9d5ff'
-        };
-      }
-      return {
-        background: 'linear-gradient(to bottom, #1e1b4b, #110f2d)',
-        borderColor: '#6b21a8',
-        color: '#c084fc'
-      };
-    }
-    
-    if (index === currentQuestion.correctAnswer) {
-      return {
-        background: 'linear-gradient(to bottom, #22c55e, #16a34a)',
-        borderColor: '#4ade80',
-        color: '#ffffff'
-      };
-    }
-    
-    if (selectedAnswer === index && selectedAnswer !== currentQuestion.correctAnswer) {
-      return {
-        background: 'linear-gradient(to bottom, #ef4444, #dc2626)',
-        borderColor: '#f87171',
-        color: '#ffffff'
-      };
-    }
-    
-    return {
-      background: 'linear-gradient(to bottom, #1e1b4b, #110f2d)',
-      borderColor: '#4c1d95',
-      color: '#7c3aed',
-      opacity: 0.6
-    };
-  };
+  const abilityButtons = [
+    {
+      key: 'fifty' as AbilityKey,
+      label: '50 / 50',
+      action: handleUseFifty,
+    },
+    {
+      key: 'freeze' as AbilityKey,
+      label: 'FREEZE',
+      action: handleUseFreeze,
+    },
+    {
+      key: 'dangerous' as AbilityKey,
+      label: 'DANGER',
+      action: handleUseDangerous,
+    },
+    {
+      key: 'skip' as AbilityKey,
+      label: 'SKIP',
+      action: handleUseSkip,
+    },
+  ];
 
-  const getButtonClass = (index: number) => {
-    if (!showResult) {
-      return selectedAnswer === index 
-        ? 'answer-selected' 
-        : 'hover:border-[#7c3aed] hover:text-[#e9d5ff]';
-    }
-    
-    if (index === currentQuestion.correctAnswer) {
-      return 'answer-correct';
-    }
-    
-    if (selectedAnswer === index && selectedAnswer !== currentQuestion.correctAnswer) {
-      return 'answer-incorrect';
-    }
-    
-    return '';
-  };
-  if (questions.length === 0) {
+  // Countdown overlay
+  if (showCountdown) {
     return (
-      <div className="pixel-container max-w-3xl w-full">
-        <div className="text-center p-12">
-          <p className="text-[#c084fc]">Loading questions...</p>
+      <div 
+        className="fixed inset-0 flex items-center justify-center z-50"
+        style={{ 
+          background: 'radial-gradient(ellipse at center, #1e1b4b 0%, #0a0015 100%)',
+        }}
+      >
+        {loadingQuestions ? (
+          <div className="text-center">
+            <div 
+              className="text-6xl mb-4"
+              style={{ animation: 'pulse 1.5s ease-in-out infinite' }}
+            >
+              ⏳
+            </div>
+            <p className="text-[#c084fc] text-lg">Loading questions...</p>
+            <style>{`
+              @keyframes pulse {
+                0%, 100% { transform: scale(1); opacity: 1; }
+                50% { transform: scale(1.1); opacity: 0.7; }
+              }
+            `}</style>
+          </div>
+        ) : (
+        <>
+        <div className="relative">
+          <div 
+            className="absolute inset-0 flex items-center justify-center"
+            style={{
+              animation: countdownValue === 'GO' ? 'none' : 'pulse-ring 1s ease-out infinite',
+            }}
+          >
+            <div 
+              style={{
+                width: '350px',
+                height: '350px',
+                borderRadius: '50%',
+                border: '4px solid rgba(168, 85, 247, 0.3)',
+                animation: 'countdown-ring 1s ease-out infinite',
+              }}
+            />
+          </div>
+          <div 
+            className="absolute inset-0 flex items-center justify-center"
+            style={{
+              animation: countdownValue === 'GO' ? 'none' : 'pulse-ring 1s ease-out infinite 0.2s',
+            }}
+          >
+            <div 
+              style={{
+                width: '300px',
+                height: '300px',
+                borderRadius: '50%',
+                border: '3px solid rgba(124, 58, 237, 0.4)',
+                animation: 'countdown-ring 1s ease-out infinite 0.2s',
+              }}
+            />
+          </div>
+          
+          <div 
+            key={countdownValue}
+            className="relative z-10 flex items-center justify-center"
+            style={{
+              width: '250px',
+              height: '250px',
+              animation: 'countdown-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+            }}
+          >
+            <span
+              style={{
+                fontSize: countdownValue === 'GO' ? '4rem' : '10rem',
+                fontWeight: 'bold',
+                color: countdownValue === 'GO' ? '#22c55e' : '#e9d5ff',
+                textShadow: countdownValue === 'GO' 
+                  ? '0 0 40px #22c55e, 0 0 80px #22c55e, 0 0 120px rgba(34, 197, 94, 0.5), 4px 4px 0 #166534'
+                  : '0 0 40px #a855f7, 0 0 80px #7c3aed, 0 0 120px rgba(124, 58, 237, 0.5), 6px 6px 0 #6b21a8',
+                fontFamily: '"Press Start 2P", cursive',
+                letterSpacing: countdownValue === 'GO' ? '0.1em' : '0',
+                WebkitTextStroke: countdownValue === 'GO' ? '2px #166534' : '3px #7c3aed',
+              }}
+            >
+              {countdownValue === 'GO' ? 'GO!' : countdownValue}
+            </span>
+          </div>
+          
+          {countdownValue === 'GO' && (
+            <>
+              {[...Array(12)].map((_, i) => (
+                <div
+                  key={i}
+                  style={{
+                    position: 'absolute',
+                    width: '10px',
+                    height: '10px',
+                    background: i % 2 === 0 ? '#22c55e' : '#a855f7',
+                    borderRadius: '50%',
+                    left: '50%',
+                    top: '50%',
+                    marginLeft: '-5px',
+                    marginTop: '-5px',
+                    boxShadow: i % 2 === 0 ? '0 0 10px #22c55e' : '0 0 10px #a855f7',
+                    animation: `particle-${i} 0.8s ease-out forwards`,
+                  }}
+                />
+              ))}
+            </>
+          )}
+        </div>
+        
+        <style>{`
+          @keyframes countdown-pop {
+            0% {
+              transform: scale(0.3);
+              opacity: 0;
+            }
+            50% {
+              transform: scale(1.1);
+            }
+            100% {
+              transform: scale(1);
+              opacity: 1;
+            }
+          }
+          
+          @keyframes countdown-ring {
+            0% {
+              transform: scale(0.8);
+              opacity: 0.8;
+            }
+            100% {
+              transform: scale(1.5);
+              opacity: 0;
+            }
+          }
+          
+          @keyframes pulse-ring {
+            0%, 100% {
+              opacity: 1;
+            }
+            50% {
+              opacity: 0.5;
+            }
+          }
+          
+          @keyframes fade-in {
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+          }
+          
+          ${[...Array(12)].map((_, i) => `
+            @keyframes particle-${i} {
+              0% {
+                transform: translate(0, 0);
+                opacity: 1;
+              }
+              100% {
+                transform: translate(${Math.cos(i * 30 * Math.PI / 180) * 150}px, ${Math.sin(i * 30 * Math.PI / 180) * 150}px);
+                opacity: 0;
+              }
+            }
+          `).join('')}
+        `}</style>
+        </>
+        )}
+      </div>
+    );
+  }
+
+  if (loadingQuestions) {
+    return (
+      <div className="pixel-container max-w-3xl w-full mx-auto">
+        <div className="text-center p-12 text-[#c084fc]">Loading questions...</div>
+      </div>
+    );
+  }
+
+  if (loadError || !currentQuestion) {
+    return (
+      <div className="pixel-container max-w-3xl w-full mx-auto">
+        <div className="text-center p-12 text-[#c084fc]">
+          {loadError || 'No questions available'}
+        </div>
+        <div className="flex justify-center mt-6">
+          <button
+            onClick={onBack}
+            className="pixel-button px-4 py-2 bg-gradient-to-b from-[#4c1d95] to-[#3b0764] border-[#6b21a8] text-[#c084fc] hover:from-[#581c87] hover:to-[#4c1d95]"
+          >
+            ← MENU
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="pixel-container max-w-3xl w-full">
-      <div className="flex justify-between items-center mb-6">
-        <button onClick={onBack} className="pixel-button px-4 py-2 bg-gradient-to-b from-[#4c1d95] to-[#3b0764] border-[#6b21a8] text-[#c084fc] hover:from-[#581c87] hover:to-[#4c1d95]">
-          ← BACK
-        </button>
-        <div className="px-6 py-2 text-[#e9d5ff]">
-          SCORE: {score}
-        </div>
-      </div>
-
-      <div className="text-center mb-6">
-        <p className="text-[#c084fc] mb-2 text-xs">QUESTION {currentQuestionIndex + 1} / {questions.length}</p>
-        <div className="h-3 bg-[#1e1b4b] rounded-none overflow-hidden border-2 border-[#6b21a8]">
+    <div 
+      className="pixel-container max-w-3xl w-full mx-auto"
+      style={{
+        opacity: quizVisible ? 1 : 0,
+        transition: 'opacity 0.3s ease-out',
+      }}
+    >
+      <div className="flex flex-col gap-3 mb-6">
+        {mode === 'endless' && (
           <div 
-            className="h-full bg-gradient-to-r from-[#7c3aed] to-[#a855f7] transition-all duration-300"
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '12px',
+              background: 'linear-gradient(to bottom, #1e1b4b, #110f2d)',
+              border: '2px solid #6b21a8',
+              borderRadius: '2px'
+            }}
+          >
+            {Array.from({ length: 3 }).map((_, idx) => (
+              <div
+                key={idx}
+                style={{
+                  filter: idx < Math.max(lives, 0) 
+                    ? 'drop-shadow(0 0 8px #f43f5e) drop-shadow(0 0 16px #f43f5e)' 
+                    : 'grayscale(1) opacity(0.3)',
+                  transition: 'filter 0.3s ease'
+                }}
+              >
+                <svg width="32" height="32" viewBox="0 0 24 24" fill={idx < Math.max(lives, 0) ? '#f43f5e' : '#4c1d95'}>
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                </svg>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div 
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '8px'
+          }}
+        >
+          <button
+            onClick={onBack}
+            className="pixel-button bg-gradient-to-b from-[#4c1d95] to-[#3b0764] border-[#6b21a8] text-[#c084fc] hover:from-[#581c87] hover:to-[#4c1d95]"
             style={{ 
-              width: `${questions.length > 0 ? ((currentQuestionIndex + 1) / questions.length) * 100 : 0}%`,
-              boxShadow: '0 0 20px rgba(168, 85, 247, 0.6)'
+              fontSize: '0.625rem',
+              padding: '10px 8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            ← BACK
+          </button>
+          <div 
+            style={{ 
+              fontSize: '0.625rem',
+              padding: '10px 8px',
+              border: '2px solid #6b21a8',
+              background: 'rgba(30, 27, 75, 0.6)',
+              color: '#e9d5ff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textAlign: 'center'
+            }}
+          >
+            {mode === 'quick' && '⚡ QUICK'}
+            {mode === 'standard' && '🎯 CLASSIC'}
+            {mode === 'endless' && '♾️ ENDLESS'}
+          </div>
+          <div 
+            style={{ 
+              fontSize: '0.625rem',
+              padding: '10px 8px',
+              border: '2px solid #7c3aed',
+              background: 'rgba(30, 27, 75, 0.6)',
+              color: '#e9d5ff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            {score} PTS
+          </div>
+          <div 
+            style={{ 
+              fontSize: '0.625rem',
+              padding: '10px 8px',
+              border: '2px solid #6b21a8',
+              background: 'rgba(30, 27, 75, 0.6)',
+              color: '#c084fc',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            Q: {mode === 'endless' ? answeredCount + 1 : `${currentQuestionIndex + 1}/${questions.length}`}
+          </div>
+        </div>
+        
+        <div 
+          style={{ 
+            background: '#1e1b4b',
+            border: '2px solid #6b21a8',
+            borderRadius: '2px',
+            overflow: 'hidden',
+            position: 'relative'
+          }}
+        >
+          <div 
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '8px 12px',
+              fontSize: '0.75rem',
+              color: timeLeft <= 5 ? '#f87171' : '#c084fc',
+              position: 'relative',
+              zIndex: 1,
+              fontWeight: 'bold'
+            }}
+          >
+            ⏱ {timeLeft}s
+          </div>
+          <div 
+            style={{ 
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              height: '5px',
+              width: `${(timeLeft / 30) * 100}%`,
+              background: timeLeft <= 5 
+                ? 'linear-gradient(to right, #ef4444, #f97316)' 
+                : 'linear-gradient(to right, #7c3aed, #a855f7)',
+              boxShadow: timeLeft <= 5 
+                ? '0 0 10px rgba(239,68,68,0.8)' 
+                : '0 0 10px rgba(168,85,247,0.6)',
+              transition: 'width 0.3s ease-out, background 0.3s, box-shadow 0.3s'
             }}
           />
         </div>
+
+        {mode !== 'endless' && (
+          <div 
+            style={{ 
+              height: '8px',
+              background: '#1e1b4b',
+              border: '2px solid #6b21a8',
+              borderRadius: '2px',
+              overflow: 'hidden'
+            }}
+          >
+            <div
+              style={{
+                height: '100%',
+                width: `${((currentQuestionIndex + 1) / questions.length) * 100}%`,
+                background: 'linear-gradient(to right, #22c55e, #a855f7)',
+                transition: 'width 0.3s ease-out'
+              }}
+            />
+          </div>
+        )}
       </div>
 
-      <div className="text-center mb-6">
-        <span 
-          className="inline-block px-6 py-3 border-3 border-[#a855f7] text-xs font-bold"
-          style={{ 
-            backgroundColor: categoryColors[currentQuestion.category],
-            color: '#ffffff',
-            textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)',
-            pointerEvents: 'none',
-            cursor: 'default'
-          }}
-        >
-          ★ {currentQuestion.category.toUpperCase()} ★
-        </span>
+      <div 
+        className="mb-6"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, 1fr)',
+          gap: '0.75rem'
+        }}
+      >
+        {abilityButtons.map(ability => (
+          <div
+            key={ability.key}
+            className="p-3 border-2 border-[#6b21a8] bg-[#1e1b4b]/70"
+            style={{ minWidth: 0 }}
+          >
+            <div className="flex items-center justify-between text-[#e9d5ff] mb-2" style={{ fontSize: '0.625rem' }}>
+              <span>{ability.label}</span>
+              <span className="text-[#a855f7]">x{abilityCharges[ability.key]}</span>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={ability.action}
+                disabled={abilityCharges[ability.key] === 0 || showResult || hasFinished}
+                className={`pixel-button flex-1 py-2 ${
+                  abilityCharges[ability.key] === 0 || showResult || hasFinished
+                    ? 'bg-[#1e1b4b] text-[#6b21a8] cursor-not-allowed border-[#4c1d95]'
+                    : 'bg-gradient-to-b from-[#7c3aed] to-[#6b21a8] border-[#a855f7] text-[#e9d5ff]'
+                }`}
+                style={{ fontSize: '0.625rem' }}
+              >
+                USE
+              </button>
+              <button
+                onClick={() => handlePurchaseAbility(ability.key)}
+                disabled={score < abilityCost || hasFinished}
+                className={`pixel-button flex-1 py-2 ${
+                  score < abilityCost || hasFinished
+                    ? 'bg-[#1e1b4b] text-[#6b21a8] cursor-not-allowed border-[#4c1d95]'
+                    : 'bg-gradient-to-b from-[#4c1d95] to-[#3b0764] border-[#6b21a8] text-[#e9d5ff]'
+                }`}
+                style={{ fontSize: '0.625rem' }}
+              >
+                BUY
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
 
       <div className="mb-8 p-6 bg-gradient-to-b from-[#1e1b4b] to-[#110f2d] border-4 border-[#7c3aed] relative">
-        <div className="absolute top-2 left-2 right-2 bottom-2 border border-[#6b21a8] pointer-events-none opacity-50"></div>
-        <p className="text-[#e9d5ff] text-center leading-relaxed relative z-10">{currentQuestion.question}</p>
-        <div className="mt-4 pt-4 border-t-2 border-[#6b21a8]">
-          <p className="text-[#c084fc] text-center">💎 {currentQuestion.points} POINTS</p>
+        <div className="absolute top-2 left-2 right-2 bottom-2 border border-[#6b21a8] pointer-events-none opacity-50" />
+        <div className="flex items-center justify-between mb-4 text-xs text-[#e9d5ff]">
+          <span
+            className="px-3 py-2 border-2"
+            style={{
+              borderColor: difficultyColors[currentQuestion.difficulty],
+              color: difficultyColors[currentQuestion.difficulty],
+            }}
+          >
+            {currentQuestion.difficulty.toUpperCase()} • {currentQuestion.points} pts
+          </span>
+          {dangerousActive && <span className="text-[#f97316]">DANGER x2 / -1</span>}
+          {!dangerousActive && <span className="text-[#a855f7]">Choose an answer</span>}
         </div>
+        <p className="text-[#e9d5ff] text-center leading-relaxed relative z-10">
+          {currentQuestion.question}
+        </p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 mb-8">
         {currentQuestion.options.map((option, index) => {
-          const buttonStyle = getButtonStyle(index);
           const isCorrect = showResult && index === currentQuestion.correctAnswer;
-          const isIncorrect = showResult && selectedAnswer === index && selectedAnswer !== currentQuestion.correctAnswer;
-          
+          const isIncorrect =
+            showResult && selectedAnswer === index && selectedAnswer !== currentQuestion.correctAnswer;
+          const disabled = disabledOptions.includes(index);
+          const isChosen = selectedAnswer === index;
+          const baseStyle = !showResult
+            ? {
+                background: isChosen
+                  ? 'linear-gradient(to bottom, #7c3aed, #6b21a8)'
+                  : 'linear-gradient(to bottom, #1e1b4b, #110f2d)',
+                borderColor: isChosen ? '#a855f7' : '#6b21a8',
+                color: isChosen ? '#e9d5ff' : '#c084fc',
+              }
+            : isCorrect
+              ? {
+                  background: 'linear-gradient(to bottom, #22c55e, #16a34a)',
+                  borderColor: '#4ade80',
+                  color: '#ffffff',
+                }
+              : isIncorrect
+                ? {
+                    background: 'linear-gradient(to bottom, #ef4444, #dc2626)',
+                    borderColor: '#f87171',
+                    color: '#ffffff',
+                  }
+                : {
+                    background: 'linear-gradient(to bottom, #1e1b4b, #110f2d)',
+                    borderColor: '#4c1d95',
+                    color: '#7c3aed',
+                  };
+
           return (
             <button
               key={index}
               onClick={() => handleAnswerSelect(index)}
-              disabled={showResult}
-              className={`pixel-button p-4 text-left transition-all ${getButtonClass(index)}`}
+              disabled={showResult || disabled}
+              className={`pixel-button p-4 text-left transition-all ${
+                !showResult && !disabled ? 'hover:border-[#7c3aed] hover:text-[#e9d5ff]' : ''
+              } ${disabled ? 'opacity-40 cursor-not-allowed' : ''}`}
               style={{
-                ...(showResult ? {} : {
-                  background: buttonStyle.background,
-                  borderColor: buttonStyle.borderColor,
-                  color: buttonStyle.color
-                }),
-                ...(showResult && !isCorrect && !isIncorrect && buttonStyle.opacity !== undefined ? { opacity: buttonStyle.opacity } : {}),
+                background: baseStyle.background,
+                borderColor: baseStyle.borderColor,
+                color: baseStyle.color,
                 borderWidth: '3px',
-                borderStyle: 'solid'
+                borderStyle: 'solid',
               }}
             >
-              <span 
+              <span
                 className="mr-3"
                 style={{
-                  color: isCorrect || isIncorrect ? '#ffffff' : '#a855f7'
+                  color: isCorrect || isIncorrect ? '#ffffff' : '#a855f7',
                 }}
               >
                 {String.fromCharCode(65 + index)}.
@@ -349,24 +882,105 @@ export function GamePage({ onComplete, onBack }: GamePageProps) {
       </div>
 
       <button
-        onClick={handleNext}
-        disabled={selectedAnswer === null && !showResult}
+        onClick={handleMainButton}
+        disabled={(!showResult && selectedAnswer === null) || hasFinished}
         className={`pixel-button w-full p-4 transition-all ${
-          selectedAnswer === null && !showResult
+          (!showResult && selectedAnswer === null) || hasFinished
             ? 'bg-[#1e1b4b] text-[#6b21a8] cursor-not-allowed border-[#4c1d95]'
             : 'bg-gradient-to-b from-[#7c3aed] to-[#6b21a8] hover:from-[#8b5cf6] hover:to-[#7c3aed] border-[#a855f7] text-[#e9d5ff]'
         }`}
       >
-        {showResult ? (isLastQuestion ? '★ FINISH ★' : 'NEXT QUESTION →') : 'SUBMIT ANSWER'}
+        {showResult ? (isLastQuestion && mode !== 'endless' ? '★ FINISH ★' : 'NEXT →') : 'SUBMIT'}
       </button>
 
       {showResult && (
         <div className="mt-6 text-center p-4 border-3 border-[#7c3aed] bg-[#1e1b4b]/50">
           {selectedAnswer === currentQuestion.correctAnswer ? (
-            <p className="text-[#a855f7]">✓ CORRECT! +{currentQuestion.points} points</p>
+            <p className="text-[#a855f7]">✓ Correct! +{currentQuestion.points * (dangerousActive ? 2 : 1)}</p>
           ) : (
-            <p className="text-[#c084fc]">✗ WRONG! Correct answer: {String.fromCharCode(65 + currentQuestion.correctAnswer)}</p>
+            <p className="text-[#c084fc]">
+              ✗ Wrong. {dangerousActive ? `-${currentQuestion.points} points. ` : ''}
+              Correct answer: {String.fromCharCode(65 + currentQuestion.correctAnswer)}
+            </p>
           )}
+        </div>
+      )}
+
+      {showEndModal && (
+        <div 
+          className="fixed inset-0 flex items-center justify-center z-50"
+          style={{ background: 'rgba(10, 0, 21, 0.9)' }}
+        >
+          <div 
+            className="pixel-container max-w-md w-full mx-4 animate-in fade-in zoom-in duration-300"
+            style={{
+              background: 'linear-gradient(to bottom, #1e1b4b, #110f2d)',
+              border: '4px solid #7c3aed',
+              boxShadow: '0 0 40px rgba(124, 58, 237, 0.5)'
+            }}
+          >
+            <div className="text-center p-6">
+              {isNewBestScore && (
+                <div 
+                  className="mb-6 p-3 animate-pulse"
+                  style={{
+                    background: 'linear-gradient(to right, #eab308, #f97316)',
+                    border: '3px solid #facc15',
+                    color: '#1e1b4b'
+                  }}
+                >
+                  <span className="text-xl font-bold">🎉 NEW BEST SCORE! 🎉</span>
+                </div>
+              )}
+              
+              <div className="space-y-4 mb-8">
+                <div 
+                  className="p-4 border-2 border-[#7c3aed]"
+                  style={{ background: 'rgba(124, 58, 237, 0.2)' }}
+                >
+                  <p className="text-[#c084fc] text-xs mb-1">YOUR SCORE</p>
+                  <p 
+                    className="text-4xl text-[#e9d5ff]"
+                    style={{ textShadow: '0 0 10px #a855f7' }}
+                  >
+                    {finalScore} pts
+                  </p>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div 
+                    className="p-4 border-2 border-[#6b21a8]"
+                    style={{ background: 'rgba(107, 33, 168, 0.2)' }}
+                  >
+                    <p className="text-[#7c3aed] text-xs mb-1">BEST SCORE</p>
+                    <p className="text-2xl text-[#c084fc]">
+                      {isNewBestScore ? finalScore : modeBestScore} pts
+                    </p>
+                  </div>
+                  
+                  <div 
+                    className="p-4 border-2 border-[#6b21a8]"
+                    style={{ background: 'rgba(107, 33, 168, 0.2)' }}
+                  >
+                    <p className="text-[#7c3aed] text-xs mb-1">LEADERBOARD</p>
+                    <p className="text-2xl text-[#c084fc]">
+                      {leaderboardPosition !== null ? `#${leaderboardPosition}` : '...'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <button
+                onClick={() => {
+                  setShowEndModal(false);
+                  onComplete(finalScore, mode);
+                }}
+                className="pixel-button w-full p-4 bg-gradient-to-b from-[#7c3aed] to-[#6b21a8] hover:from-[#8b5cf6] hover:to-[#7c3aed] border-[#a855f7] text-[#e9d5ff]"
+              >
+                MENU
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

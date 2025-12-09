@@ -27,68 +27,229 @@ export function Profile({ user, onBack }: ProfileProps) {
         <p className="text-[#7c3aed] text-xs relative z-10">GEEK FORTUNE PLAYER</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-2 gap-4 mb-8">
         <div className="pixel-button p-6 bg-gradient-to-b from-[#1e1b4b] to-[#110f2d] border-[#6b21a8] text-center">
           <p className="text-[#7c3aed] mb-2 text-xs">GAMES PLAYED</p>
-          <p className="text-[#c084fc] text-2xl">{user.gamesPlayed}</p>
+          <p className="text-[#c084fc] text-3xl font-bold">{user.gamesPlayed}</p>
         </div>
         
-        <div className="pixel-button p-6 bg-gradient-to-b from-[#6b21a8] to-[#581c87] border-[#7c3aed] text-center">
-          <p className="text-[#c084fc] mb-2 text-xs">BEST SCORE</p>
-          <p className="text-[#e9d5ff] text-2xl">{user.bestScore} pts</p>
-        </div>
-        
-        <div className="pixel-button p-6 bg-gradient-to-b from-[#1e1b4b] to-[#110f2d] border-[#6b21a8] text-center">
-          <p className="text-[#7c3aed] mb-2 text-xs">TOTAL SCORE</p>
-          <p className="text-[#c084fc] text-2xl">{user.totalScore} pts</p>
+        <div className="pixel-button p-6 bg-gradient-to-b from-[#7c3aed] to-[#6b21a8] border-[#a855f7] text-center">
+          <p className="text-[#e9d5ff] mb-2 text-xs">AVERAGE SCORE</p>
+          <p className="text-[#e9d5ff] text-3xl font-bold">{averageScore}</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 mb-8">
-        <div className="pixel-button p-6 bg-gradient-to-b from-[#7c3aed] to-[#6b21a8] border-[#a855f7] text-center">
-          <p className="text-[#e9d5ff] mb-2 text-xs">AVERAGE SCORE</p>
-          <p className="text-[#e9d5ff] text-2xl">{averageScore} pts</p>
+      <div className="mb-8">
+        <div className="text-center mb-4">
+          <span className="text-[#c084fc] text-sm">★ MODE STATISTICS ★</span>
+        </div>
+        
+        <div className="grid grid-cols-3 gap-3">
+          <div 
+            className="relative overflow-hidden"
+            style={{
+              background: 'linear-gradient(135deg, #1e1b4b 0%, #0f0d24 100%)',
+              border: '3px solid #eab308',
+              borderRadius: '4px',
+              padding: '16px 12px'
+            }}
+          >
+            <div 
+              className="absolute top-0 left-0 right-0 h-1"
+              style={{ background: 'linear-gradient(90deg, #eab308, #f59e0b)' }}
+            />
+            <div className="text-center">
+              <div className="text-3xl mb-2">⚡</div>
+              <p style={{ color: '#eab308', fontSize: '12px', fontWeight: 'bold', marginBottom: '12px' }}>QUICK</p>
+              <div 
+                className="py-2 px-3 mb-2"
+                style={{ background: 'rgba(234, 179, 8, 0.2)', borderRadius: '4px' }}
+              >
+                <p style={{ color: '#fde047', fontSize: '20px', fontWeight: 'bold' }}>{user.bestScoreQuick}</p>
+                <p style={{ color: '#c084fc', fontSize: '10px' }}>BEST SCORE</p>
+              </div>
+              <p style={{ color: '#e9d5ff', fontSize: '12px' }}>{user.gamesPlayedQuick} games</p>
+            </div>
+          </div>
+
+          <div 
+            className="relative overflow-hidden"
+            style={{
+              background: 'linear-gradient(135deg, #1e1b4b 0%, #0f0d24 100%)',
+              border: '3px solid #22c55e',
+              borderRadius: '4px',
+              padding: '16px 12px'
+            }}
+          >
+            <div 
+              className="absolute top-0 left-0 right-0 h-1"
+              style={{ background: 'linear-gradient(90deg, #22c55e, #4ade80)' }}
+            />
+            <div className="text-center">
+              <div className="text-3xl mb-2">🎯</div>
+              <p style={{ color: '#22c55e', fontSize: '12px', fontWeight: 'bold', marginBottom: '12px' }}>CLASSIC</p>
+              <div 
+                className="py-2 px-3 mb-2"
+                style={{ background: 'rgba(34, 197, 94, 0.2)', borderRadius: '4px' }}
+              >
+                <p style={{ color: '#4ade80', fontSize: '20px', fontWeight: 'bold' }}>{user.bestScoreStandard}</p>
+                <p style={{ color: '#c084fc', fontSize: '10px' }}>BEST SCORE</p>
+              </div>
+              <p style={{ color: '#e9d5ff', fontSize: '12px' }}>{user.gamesPlayedStandard} games</p>
+            </div>
+          </div>
+
+          <div 
+            className="relative overflow-hidden"
+            style={{
+              background: 'linear-gradient(135deg, #1e1b4b 0%, #0f0d24 100%)',
+              border: '3px solid #ef4444',
+              borderRadius: '4px',
+              padding: '16px 12px'
+            }}
+          >
+            <div 
+              className="absolute top-0 left-0 right-0 h-1"
+              style={{ background: 'linear-gradient(90deg, #ef4444, #f87171)' }}
+            />
+            <div className="text-center">
+              <div className="text-3xl mb-2">♾️</div>
+              <p style={{ color: '#ef4444', fontSize: '12px', fontWeight: 'bold', marginBottom: '12px' }}>ENDLESS</p>
+              <div 
+                className="py-2 px-3 mb-2"
+                style={{ background: 'rgba(239, 68, 68, 0.2)', borderRadius: '4px' }}
+              >
+                <p style={{ color: '#f87171', fontSize: '20px', fontWeight: 'bold' }}>{user.bestScoreEndless}</p>
+                <p style={{ color: '#c084fc', fontSize: '10px' }}>BEST SCORE</p>
+              </div>
+              <p style={{ color: '#e9d5ff', fontSize: '12px' }}>{user.gamesPlayedEndless} games</p>
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="p-6 bg-gradient-to-b from-[#1e1b4b] to-[#110f2d] border-4 border-[#6b21a8] relative">
         <div className="absolute top-2 left-2 right-2 bottom-2 border border-[#6b21a8] pointer-events-none opacity-30"></div>
         <h3 className="text-[#c084fc] mb-4 text-center relative z-10">★ ACHIEVEMENTS ★</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 relative z-10">
-          <div className={`p-3 text-center border-2 transition-all ${
+        <div className="grid grid-cols-2 gap-3 relative z-10">
+          <div className={`p-3 text-center border-2 transition-all flex items-center gap-3 ${
             user.gamesPlayed >= 1 
               ? 'bg-gradient-to-b from-[#7c3aed] to-[#6b21a8] border-[#a855f7]' 
-              : 'bg-[#1e1b4b] border-[#4c1d95]'
+              : 'bg-[#1e1b4b] border-[#4c1d95] opacity-50'
           }`}>
-            <div className="text-2xl mb-1">🎮</div>
-            <p className="text-xs text-[#e9d5ff]">First Game</p>
+            <div className="text-2xl">🎮</div>
+            <div className="text-left">
+              <p className="text-xs text-[#e9d5ff] font-bold">First Steps</p>
+              <p className="text-[10px] text-[#c084fc]">Play your first game</p>
+            </div>
           </div>
           
-          <div className={`p-3 text-center border-2 transition-all ${
+          <div className={`p-3 text-center border-2 transition-all flex items-center gap-3 ${
             user.gamesPlayed >= 10 
               ? 'bg-gradient-to-b from-[#7c3aed] to-[#6b21a8] border-[#a855f7]' 
-              : 'bg-[#1e1b4b] border-[#4c1d95]'
+              : 'bg-[#1e1b4b] border-[#4c1d95] opacity-50'
           }`}>
-            <div className="text-2xl mb-1">🔟</div>
-            <p className="text-xs text-[#e9d5ff]">10 Games</p>
+            <div className="text-2xl">🔥</div>
+            <div className="text-left">
+              <p className="text-xs text-[#e9d5ff] font-bold">Dedicated</p>
+              <p className="text-[10px] text-[#c084fc]">Play 10 games</p>
+            </div>
           </div>
           
-          <div className={`p-3 text-center border-2 transition-all ${
+          <div className={`p-3 text-center border-2 transition-all flex items-center gap-3 ${
+            user.gamesPlayed >= 25 
+              ? 'bg-gradient-to-b from-[#7c3aed] to-[#6b21a8] border-[#a855f7]' 
+              : 'bg-[#1e1b4b] border-[#4c1d95] opacity-50'
+          }`}>
+            <div className="text-2xl">⭐</div>
+            <div className="text-left">
+              <p className="text-xs text-[#e9d5ff] font-bold">Veteran</p>
+              <p className="text-[10px] text-[#c084fc]">Play 25 games</p>
+            </div>
+          </div>
+          
+          <div className={`p-3 text-center border-2 transition-all flex items-center gap-3 ${
             user.bestScore >= 500 
               ? 'bg-gradient-to-b from-[#7c3aed] to-[#6b21a8] border-[#a855f7]' 
-              : 'bg-[#1e1b4b] border-[#4c1d95]'
+              : 'bg-[#1e1b4b] border-[#4c1d95] opacity-50'
           }`}>
-            <div className="text-2xl mb-1">⭐</div>
-            <p className="text-xs text-[#e9d5ff]">500+ Score</p>
+            <div className="text-2xl">🏅</div>
+            <div className="text-left">
+              <p className="text-xs text-[#e9d5ff] font-bold">Rising Star</p>
+              <p className="text-[10px] text-[#c084fc]">Score 500+ points</p>
+            </div>
           </div>
           
-          <div className={`p-3 text-center border-2 transition-all ${
+          <div className={`p-3 text-center border-2 transition-all flex items-center gap-3 ${
             user.bestScore >= 1000 
               ? 'bg-gradient-to-b from-[#7c3aed] to-[#6b21a8] border-[#a855f7]' 
-              : 'bg-[#1e1b4b] border-[#4c1d95]'
+              : 'bg-[#1e1b4b] border-[#4c1d95] opacity-50'
           }`}>
-            <div className="text-2xl mb-1">💎</div>
-            <p className="text-xs text-[#e9d5ff]">Perfect Score</p>
+            <div className="text-2xl">👑</div>
+            <div className="text-left">
+              <p className="text-xs text-[#e9d5ff] font-bold">Champion</p>
+              <p className="text-[10px] text-[#c084fc]">Score 1000+ points</p>
+            </div>
+          </div>
+          
+          <div className={`p-3 text-center border-2 transition-all flex items-center gap-3 ${
+            user.bestScore >= 2000 
+              ? 'bg-gradient-to-b from-[#7c3aed] to-[#6b21a8] border-[#a855f7]' 
+              : 'bg-[#1e1b4b] border-[#4c1d95] opacity-50'
+          }`}>
+            <div className="text-2xl">💎</div>
+            <div className="text-left">
+              <p className="text-xs text-[#e9d5ff] font-bold">Legend</p>
+              <p className="text-[10px] text-[#c084fc]">Score 2000+ points</p>
+            </div>
+          </div>
+          
+          <div className={`p-3 text-center border-2 transition-all flex items-center gap-3 ${
+            user.gamesPlayedQuick >= 5 
+              ? 'bg-gradient-to-b from-[#7c3aed] to-[#6b21a8] border-[#a855f7]' 
+              : 'bg-[#1e1b4b] border-[#4c1d95] opacity-50'
+          }`}>
+            <div className="text-2xl">⚡</div>
+            <div className="text-left">
+              <p className="text-xs text-[#e9d5ff] font-bold">Speed Demon</p>
+              <p className="text-[10px] text-[#c084fc]">Play 5 Quick games</p>
+            </div>
+          </div>
+          
+          <div className={`p-3 text-center border-2 transition-all flex items-center gap-3 ${
+            user.gamesPlayedStandard >= 5 
+              ? 'bg-gradient-to-b from-[#7c3aed] to-[#6b21a8] border-[#a855f7]' 
+              : 'bg-[#1e1b4b] border-[#4c1d95] opacity-50'
+          }`}>
+            <div className="text-2xl">🎯</div>
+            <div className="text-left">
+              <p className="text-xs text-[#e9d5ff] font-bold">Sharpshooter</p>
+              <p className="text-[10px] text-[#c084fc]">Play 5 Classic games</p>
+            </div>
+          </div>
+          
+          <div className={`p-3 text-center border-2 transition-all flex items-center gap-3 ${
+            user.gamesPlayedEndless >= 5 
+              ? 'bg-gradient-to-b from-[#7c3aed] to-[#6b21a8] border-[#a855f7]' 
+              : 'bg-[#1e1b4b] border-[#4c1d95] opacity-50'
+          }`}>
+            <div className="text-2xl">♾️</div>
+            <div className="text-left">
+              <p className="text-xs text-[#e9d5ff] font-bold">Survivor</p>
+              <p className="text-[10px] text-[#c084fc]">Play 5 Endless games</p>
+            </div>
+          </div>
+          
+          <div className={`p-3 text-center border-2 transition-all flex items-center gap-3 ${
+            user.gamesPlayedQuick >= 1 && user.gamesPlayedStandard >= 1 && user.gamesPlayedEndless >= 1
+              ? 'bg-gradient-to-b from-[#7c3aed] to-[#6b21a8] border-[#a855f7]' 
+              : 'bg-[#1e1b4b] border-[#4c1d95] opacity-50'
+          }`}>
+            <div className="text-2xl">🌟</div>
+            <div className="text-left">
+              <p className="text-xs text-[#e9d5ff] font-bold">Explorer</p>
+              <p className="text-[10px] text-[#c084fc]">Try all game modes</p>
+            </div>
           </div>
         </div>
       </div>

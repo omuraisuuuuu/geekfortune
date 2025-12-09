@@ -1,5 +1,4 @@
 @import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
-/*! tailwindcss v4.1.3 | MIT License | https://tailwindcss.com */
 @layer properties {
   @supports (((-webkit-hyphens: none)) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color: rgb(from red r g b)))) {
     *, :before, :after, ::backdrop {
@@ -493,6 +492,18 @@
     display: flex;
   }
 
+  .flex-col {
+    flex-direction: column;
+  }
+
+  .flex-1 {
+    flex: 1 1 0%;
+  }
+
+  .flex-wrap {
+    flex-wrap: wrap;
+  }
+
   .grid {
     display: grid;
   }
@@ -501,12 +512,24 @@
     display: inline-block;
   }
 
+  .h-2 {
+    height: calc(var(--spacing) * 2);
+  }
+
   .h-3 {
     height: calc(var(--spacing) * 3);
   }
 
   .h-4 {
     height: calc(var(--spacing) * 4);
+  }
+
+  .h-5 {
+    height: calc(var(--spacing) * 5);
+  }
+
+  .h-6 {
+    height: calc(var(--spacing) * 6);
   }
 
   .h-full {
@@ -519,6 +542,14 @@
 
   .w-4 {
     width: calc(var(--spacing) * 4);
+  }
+
+  .w-5 {
+    width: calc(var(--spacing) * 5);
+  }
+
+  .w-6 {
+    width: calc(var(--spacing) * 6);
   }
 
   .w-12 {
@@ -571,6 +602,10 @@
 
   .justify-center {
     justify-content: center;
+  }
+
+  .gap-1 {
+    gap: calc(var(--spacing) * 1);
   }
 
   .gap-2 {
@@ -770,6 +805,10 @@
     padding: calc(var(--spacing) * 12);
   }
 
+  .px-3 {
+    padding-inline: calc(var(--spacing) * 3);
+  }
+
   .px-4 {
     padding-inline: calc(var(--spacing) * 4);
   }
@@ -838,6 +877,16 @@
   .text-xs {
     font-size: var(--text-xs);
     line-height: var(--tw-leading, var(--text-xs--line-height));
+  }
+
+  .text-sm {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+
+  .text-lg {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
   }
 
   .leading-relaxed {
@@ -1073,6 +1122,8 @@ html {
 * {
   image-rendering: pixelated;
   font-family: "Press Start 2P", cursive;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 @keyframes stars-float {
@@ -1159,8 +1210,14 @@ body:after {
   color: #e9d5ff;
   background: linear-gradient(#1e1b4be6 0%, #110f2df2 100%);
   border: 3px solid #a855f7;
-  transition: all .1s;
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease, background .15s ease, color .15s ease;
   position: relative;
+  transform: scale(1) translate3d(0, 0, 0);
+  transform-origin: center center;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   box-shadow: 4px 4px #6b21a8, 0 0 20px #a855f74d;
 }
 
@@ -1173,14 +1230,14 @@ body:after {
 }
 
 .pixel-button:hover {
+  transform: scale(1.02) translate3d(0, 0, 0);
   border-color: #c084fc;
-  transform: translate(2px, 2px);
-  box-shadow: 2px 2px #6b21a8, 0 0 30px #a855f780;
+  box-shadow: 3px 3px #6b21a8, 0 0 35px #a855f799;
 }
 
 .pixel-button:active {
-  transform: translate(4px, 4px);
-  box-shadow: 0 0 #6b21a8, 0 0 20px #a855f766;
+  transform: scale(0.98) translate3d(0, 0, 0);
+  box-shadow: 1px 1px #6b21a8, 0 0 25px #a855f780;
 }
 
 .pixel-button:disabled {
@@ -1190,7 +1247,7 @@ body:after {
 }
 
 .pixel-button:disabled:hover {
-  transform: none;
+  transform: scale(1) translate3d(0, 0, 0);
   box-shadow: 4px 4px #6b21a8;
 }
 
@@ -1216,8 +1273,8 @@ body:after {
 .pixel-button.answer-incorrect:active,
 .pixel-button.answer-selected:active,
 .pixel-button.avatar-selected:active {
-  transform: translate(4px, 4px) !important;
-  box-shadow: 0 0 #6b21a8, 0 0 20px rgba(168, 85, 247, 0.4) !important;
+  transform: scale(0.98) translate3d(0, 0, 0) !important;
+  box-shadow: 1px 1px #6b21a8, 0 0 25px rgba(168, 85, 247, 0.5) !important;
 }
 
 .pixel-button.avatar-selected {
@@ -1369,14 +1426,11 @@ body:after {
   }
 }
 
-/* Mobile Responsive Styles - только для телефонов */
 @media (max-width: 639px) {
-  /* App container */
   .min-h-screen {
     padding: 0.5rem !important;
   }
 
-  /* Pixel container */
   .pixel-container {
     padding: 1rem !important;
     width: 100% !important;
@@ -1385,7 +1439,6 @@ body:after {
     max-height: 90vh !important;
   }
 
-  /* Leaderboard specific */
   .leaderboard-container {
     width: 100% !important;
     min-height: 400px !important;
@@ -1450,7 +1503,6 @@ body:after {
     width: 3rem !important;
   }
 
-  /* Titles */
   .pixel-title {
     font-size: 1.25rem !important;
     letter-spacing: 2px !important;
@@ -1468,7 +1520,6 @@ body:after {
     font-size: 1.25rem !important;
   }
 
-  /* Buttons */
   .pixel-button {
     padding: 0.75rem !important;
     font-size: 0.75rem !important;
@@ -1534,13 +1585,11 @@ body:after {
     margin-top: 0.5rem !important;
   }
 
-  /* Inputs */
   .pixel-input {
     padding: 0.75rem !important;
     font-size: 0.75rem !important;
   }
 
-  /* Text sizes */
   .text-xs {
     font-size: 0.625rem !important;
   }
@@ -1557,17 +1606,15 @@ body:after {
     font-size: 2.5rem !important;
   }
 
-  /* Grid adjustments */
   .grid-cols-4 {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 0.5rem !important;
   }
 
   .grid-cols-2 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 
-  /* Music player */
   .fixed.top-4 {
     top: 0.5rem !important;
     right: 0.5rem !important;
@@ -1582,7 +1629,6 @@ body:after {
     height: 0.75rem !important;
   }
 
-  /* Profile specific */
   .text-7xl {
     font-size: 2.5rem !important;
   }
@@ -1591,12 +1637,10 @@ body:after {
     font-size: 1.125rem !important;
   }
 
-  /* Game page specific */
   .h-3 {
     height: 0.5rem !important;
   }
 
-  /* Wrapper adjustments */
   .max-w-md,
   .max-w-2xl,
   .max-w-3xl {
@@ -1604,7 +1648,6 @@ body:after {
     width: 100% !important;
   }
 
-  /* Gap adjustments */
   .gap-3 {
     gap: 0.5rem !important;
   }
@@ -1613,7 +1656,6 @@ body:after {
     gap: 0.5rem !important;
   }
 
-  /* Width adjustments */
   .w-32 {
     width: 3rem !important;
   }
@@ -1630,7 +1672,6 @@ body:after {
     width: 2rem !important;
   }
 
-  /* Leaderboard entries mobile layout */
   .leaderboard-container .space-y-3 {
     max-height: calc(90vh - 200px) !important;
   }

@@ -46,6 +46,12 @@ export function LoginPage({ onLogin }: LoginPageProps) {
             total_score: 0,
             games_played: 0,
             best_score: 0,
+            best_score_quick: 0,
+            best_score_standard: 0,
+            best_score_endless: 0,
+            games_played_quick: 0,
+            games_played_standard: 0,
+            games_played_endless: 0,
           })
           .select()
           .single();
@@ -69,6 +75,12 @@ export function LoginPage({ onLogin }: LoginPageProps) {
             totalScore: data.total_score || 0,
             gamesPlayed: data.games_played || 0,
             bestScore: data.best_score || 0,
+            bestScoreQuick: data.best_score_quick || 0,
+            bestScoreStandard: data.best_score_standard || 0,
+            bestScoreEndless: data.best_score_endless || 0,
+            gamesPlayedQuick: data.games_played_quick || 0,
+            gamesPlayedStandard: data.games_played_standard || 0,
+            gamesPlayedEndless: data.games_played_endless || 0,
           };
           onLogin(newUser);
         }
@@ -105,6 +117,12 @@ export function LoginPage({ onLogin }: LoginPageProps) {
           totalScore: data.total_score || 0,
           gamesPlayed: data.games_played || 0,
           bestScore: data.best_score || 0,
+          bestScoreQuick: data.best_score_quick || 0,
+          bestScoreStandard: data.best_score_standard || 0,
+          bestScoreEndless: data.best_score_endless || 0,
+          gamesPlayedQuick: data.games_played_quick || 0,
+          gamesPlayedStandard: data.games_played_standard || 0,
+          gamesPlayedEndless: data.games_played_endless || 0,
         };
         onLogin(existingUser);
       }

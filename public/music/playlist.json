@@ -1,0 +1,19 @@
+{
+  "songs": [
+    {
+      "id": "song1",
+      "name": "Neon Dreams",
+      "file": "/music/1.mp3"
+    },
+    {
+      "id": "song2",
+      "name": "Cyber Pulse",
+      "file": "/music/2.mp3"
+    },
+    {
+      "id": "song3",
+      "name": "Electric Wave",
+      "file": "/music/3.mp3"
+    }
+  ]
+}

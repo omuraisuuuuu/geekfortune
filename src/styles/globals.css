@@ -3,11 +3,11 @@
 :root {
   --font-size: 16px;
   --background: #ffffff;
-  --foreground: oklch(0.145 0 0);
+  --foreground: #ffffff;
   --card: #ffffff;
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: #ffffff;
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
+  --popover-foreground: #ffffff;
   --primary: #030213;
   --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.95 0.0058 264.53);
@@ -129,9 +129,6 @@
   }
 }
 
-/**
- * Base typography. This is not applied to elements which have an ancestor with a Tailwind text class.
- */
 @layer base {
   :where(:not(:has([class*=' text-']), :not(:has([class^='text-'])))) {
     h1 {
@@ -188,12 +185,13 @@ html {
   font-size: var(--font-size);
 }
 
-/* Pixel Art Retro Game Styles - Cyberpunk Purple Theme */
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
 * {
   font-family: 'Press Start 2P', cursive;
   image-rendering: pixelated;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 @keyframes stars-float {
@@ -286,9 +284,15 @@ body::after {
 .pixel-button {
   border: 3px solid #a855f7;
   cursor: pointer;
-  transition: all 0.1s;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
   text-transform: uppercase;
   position: relative;
+  transform: scale(1) translate3d(0, 0, 0);
+  transform-origin: center center;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   box-shadow: 
     4px 4px 0 #6b21a8,
     0 0 20px rgba(168, 85, 247, 0.3);
@@ -308,18 +312,18 @@ body::after {
 }
 
 .pixel-button:hover {
-  transform: translate(2px, 2px);
+  transform: scale(1.02) translate3d(0, 0, 0);
   box-shadow: 
-    2px 2px 0 #6b21a8,
-    0 0 30px rgba(168, 85, 247, 0.5);
+    3px 3px 0 #6b21a8,
+    0 0 35px rgba(168, 85, 247, 0.6);
   border-color: #c084fc;
 }
 
 .pixel-button:active {
-  transform: translate(4px, 4px);
+  transform: scale(0.98) translate3d(0, 0, 0);
   box-shadow: 
-    0 0 0 #6b21a8,
-    0 0 20px rgba(168, 85, 247, 0.4);
+    1px 1px 0 #6b21a8,
+    0 0 25px rgba(168, 85, 247, 0.5);
 }
 
 .pixel-button:disabled {
@@ -329,7 +333,7 @@ body::after {
 }
 
 .pixel-button:disabled:hover {
-  transform: none;
+  transform: scale(1) translate3d(0, 0, 0);
   box-shadow: 4px 4px 0 #6b21a8;
 }
 
@@ -369,7 +373,6 @@ body::after {
     0 0 40px rgba(168, 85, 247, 0.3);
 }
 
-/* Pixel art decorative stars */
 .pixel-stars {
   position: fixed;
   width: 100%;
@@ -391,7 +394,6 @@ body::after {
   animation: glow-pulse 3s ease-in-out infinite;
 }
 
-/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 12px;
 }
@@ -411,14 +413,11 @@ body::after {
   background: #a855f7;
 }
 
-/* Mobile Responsive Styles - только для телефонов */
 @media (max-width: 639px) {
-  /* App container */
   body > div.min-h-screen {
     padding: 0.5rem !important;
   }
 
-  /* Pixel container */
   .pixel-container {
     padding: 1rem !important;
     width: 100% !important;
@@ -427,25 +426,21 @@ body::after {
     max-height: 90vh !important;
   }
 
-  /* Titles */
   .pixel-title {
     font-size: 1.25rem !important;
     letter-spacing: 2px !important;
   }
 
-  /* Inputs */
   .pixel-input {
     padding: 0.75rem !important;
     font-size: 0.75rem !important;
   }
 
-  /* Buttons */
   .pixel-button {
     padding: 0.75rem !important;
     font-size: 0.75rem !important;
   }
 
-  /* Spacing adjustments */
   .pixel-container > * {
     margin-bottom: 1rem;
   }
