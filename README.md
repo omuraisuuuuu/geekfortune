@@ -4,7 +4,7 @@ A retro-style quiz game application that tests your knowledge of pop culture acr
 
 ## 🎮 Live Demo
 
-**Deployed Site**: [geekfortune-4k8d0o25a-omuraisus-projects.vercel.app](https://geekfortune-4k8d0o25a-omuraisus-projects.vercel.app)
+**Deployed Site**: [geekfortune-52ia0f70h-omuraisus-projects.vercel.app](geekfortune-52ia0f70h-omuraisus-projects.vercel.app)
 
 ## 🗄️ Database
 
